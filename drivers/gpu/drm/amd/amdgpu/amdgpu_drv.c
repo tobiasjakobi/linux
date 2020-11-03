@@ -2360,10 +2360,12 @@ retry_init:
 		goto err_pci;
 
 	/*
+	 * 0. only init fbdev for Renoir iGPU
 	 * 1. don't init fbdev on hw without DCE
 	 * 2. don't init fbdev if there are no connectors
 	 */
-	if (adev->mode_info.mode_config_initialized &&
+	if (((adev->apu_flags & AMD_APU_IS_RENOIR) || (pdev->device == 0x73df)) &&
+	    adev->mode_info.mode_config_initialized &&
 	    !list_empty(&adev_to_drm(adev)->mode_config.connector_list)) {
 		/* select 8 bpp console on low vram cards */
 		if (adev->gmc.real_vram_size <= (32*1024*1024))
