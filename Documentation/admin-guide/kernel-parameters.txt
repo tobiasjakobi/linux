@@ -6989,6 +6989,8 @@
 			in situations with strict latency requirements (where
 			interruptions from clocksource watchdog are not
 			acceptable).
+			[x86] directsync: attempt to sync the tsc via direct
+			writes if MSR_IA32_TSC_ADJUST isn't available
 			[x86] recalibrate: force recalibration against a HW timer
 			(HPET or PM timer) on systems whose TSC frequency was
 			obtained from HW or FW using either an MSR or CPUID(0x15).
