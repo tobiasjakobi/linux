@@ -802,6 +802,11 @@ struct drm_display_info {
 	bool non_desktop;
 
 	/**
+	 * @force_vrr: Force variable refresh rate.
+	 */
+	bool force_vrr;
+
+	/**
 	 * @monitor_range: Frequency range supported by monitor range descriptor
 	 */
 	struct drm_monitor_range_info monitor_range;

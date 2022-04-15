@@ -94,6 +94,8 @@ static int oui(u8 first, u8 second, u8 third)
 #define EDID_QUIRK_NON_DESKTOP			(1 << 12)
 /* Cap the DSC target bitrate to 15bpp */
 #define EDID_QUIRK_CAP_DSC_15BPP		(1 << 13)
+/* Force use of variable refresh rate */
+#define EDID_QUIRK_FORCE_VRR			(1 << 14)
 
 #define MICROSOFT_IEEE_OUI	0xca125c
 
@@ -140,6 +142,9 @@ static const struct edid_quirk {
 
 	/* BOE model on HP Pavilion 15-n233sl reports 8 bpc, but is a 6 bpc panel */
 	EDID_QUIRK('B', 'O', 'E', 0x78b, EDID_QUIRK_FORCE_6BPC),
+
+	/* BOE NV156FH on Dell G5 5505 is Freesync capable. */
+	EDID_QUIRK('B', 'O', 'E', 0x84a, EDID_QUIRK_FORCE_VRR),
 
 	/* CPT panel of Asus UX303LA reports 8 bpc, but is a 6 bpc panel */
 	EDID_QUIRK('C', 'P', 'T', 0x17df, EDID_QUIRK_FORCE_6BPC),
@@ -2997,6 +3002,42 @@ static void edid_fixup_preferred(struct drm_connector *connector)
 	}
 
 	preferred_mode->type |= DRM_MODE_TYPE_PREFERRED;
+}
+
+/*
+ * Some displays are capable of VRR, even though the EDID does not mention
+ * anything about the supported VRR range. Usually these display's EDID
+ * only provide a single DTD, containg the native mode with a high vertical
+ * refresh frequency.
+ *
+ * Test on Windows have shown that either the driver or something else
+ * configures a VRR range of 40 to 90. Hence we apply the following logic here:
+ * - if we have probed modes, grab the first available mode
+ * - compute vrefresh rate for the mode
+ * - compute lower vrefresh using a factor of 0.277
+ * - compute upper vrefresh using 0.625
+ */
+static void edid_force_vrr(struct drm_connector *connector)
+{
+	struct drm_display_info *info = &connector->display_info;
+	struct drm_display_mode *mode;
+	int vfreq, min_vfreq, max_vfreq;
+
+	if (list_empty(&connector->probed_modes))
+		return;
+
+	mode = list_first_entry(&connector->probed_modes, struct drm_display_mode, head);
+	vfreq = drm_mode_vrefresh(mode);
+
+	min_vfreq = (vfreq * 277) / 1000;
+	max_vfreq = (vfreq * 625) / 1000;
+
+	DRM_INFO("forcing VRR range to %d:%d\n", min_vfreq, max_vfreq);
+
+	info->monitor_range.min_vfreq = min_vfreq;
+	info->monitor_range.max_vfreq = max_vfreq;
+
+	info->force_vrr = true;
 }
 
 static bool
@@ -6880,6 +6921,9 @@ static int _drm_edid_connector_add_modes(struct drm_connector *connector,
 
 	if (info->quirks & (EDID_QUIRK_PREFER_LARGE_60 | EDID_QUIRK_PREFER_LARGE_75))
 		edid_fixup_preferred(connector);
+
+	if (info->quirks & EDID_QUIRK_FORCE_VRR)
+		edid_force_vrr(connector);
 
 	return num_modes;
 }

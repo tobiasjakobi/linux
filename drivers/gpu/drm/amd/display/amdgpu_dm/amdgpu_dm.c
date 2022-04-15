@@ -12228,6 +12228,13 @@ void amdgpu_dm_update_freesync_caps(struct drm_connector *connector,
 	     connector->display_info.monitor_range.max_vfreq == 0))
 		parse_edid_displayid_vrr(connector, edid);
 
+	if (connector->display_info.force_vrr) {
+		DRM_INFO("Forcing FreeSync capability\n");
+
+		freesync_capable = true;
+		goto update;
+	}
+
 	if (edid && (sink->sink_signal == SIGNAL_TYPE_DISPLAY_PORT ||
 		     sink->sink_signal == SIGNAL_TYPE_EDP)) {
 		bool edid_check_required = false;
