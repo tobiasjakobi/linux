@@ -46,14 +46,14 @@ static bool unlock_global_acpi_lock(void)
 #define OXP_SENSOR_FAN_REG             0x76 /* Fan reading is 2 registers long */
 #define OXP_2_SENSOR_FAN_REG           0x58 /* Fan reading is 2 registers long */
 #define OXP_SENSOR_PWM_ENABLE_REG      0x4A /* PWM enable is 1 register long */
-#define OXP_SENSOR_PWM_REG             0x4B /* PWM reading is 1 register long */
+#define OXP_SENSOR_PWM_REG             0x4B /* PWM control is 1 register long */
 #define PWM_MODE_AUTO                  0x00
 #define PWM_MODE_MANUAL                0x01
 
 /* OrangePi fan reading and PWM */
 #define ORANGEPI_SENSOR_FAN_REG        0x78 /* Fan reading is 2 registers long */
 #define ORANGEPI_SENSOR_PWM_ENABLE_REG 0x40 /* PWM enable is 1 register long */
-#define ORANGEPI_SENSOR_PWM_REG        0x38 /* PWM reading is 1 register long */
+#define ORANGEPI_SENSOR_PWM_REG        0x38 /* PWM control is 1 register long */
 
 /* Turbo button takeover function
  * Different boards have different values and EC registers
