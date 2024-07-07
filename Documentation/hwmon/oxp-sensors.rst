@@ -74,7 +74,7 @@ fan1_input
 
 pwm1_enable
   Read Write. Enable manual fan control. Write "1" to set to manual, write "0"
-  to let the EC control de fan speed. Read this attribute to see current status.
+  to let the EC control the fan speed. Read this attribute to see current status.
 
 pwm1
   Read Write. Read this attribute to see current duty cycle in the range [0-255].
