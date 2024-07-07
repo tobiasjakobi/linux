@@ -161,6 +161,11 @@ struct transaction {
 	u8 flags;
 };
 
+struct batch_transaction {
+	struct transaction base_transaction;
+	unsigned int num_batches;
+};
+
 struct acpi_ec_query {
 	struct transaction transaction;
 	struct work_struct work;
@@ -815,12 +820,25 @@ unlock:
 	return ret;
 }
 
+static bool is_valid_transaction(const struct transaction *t) {
+	if (!t)
+		return false;
+
+	if (t->wlen && !t->wdata)
+		return false;
+
+	if (t->rlen && !t->rdata)
+		return false;
+
+	return true;
+}
+
 static int acpi_ec_transaction(struct acpi_ec *ec, struct transaction *t)
 {
 	int status;
 	u32 glk;
 
-	if (!ec || (!t) || (t->wlen && !t->wdata) || (t->rlen && !t->rdata))
+	if (!ec || !is_valid_transaction(t))
 		return -EINVAL;
 
 	mutex_lock(&ec->mutex);
@@ -833,6 +851,46 @@ static int acpi_ec_transaction(struct acpi_ec *ec, struct transaction *t)
 	}
 
 	status = acpi_ec_transaction_unlocked(ec, t);
+
+	if (ec->global_lock)
+		acpi_release_global_lock(glk);
+unlock:
+	mutex_unlock(&ec->mutex);
+	return status;
+}
+
+static int acpi_ec_batch_transaction(struct acpi_ec *ec, struct batch_transaction *bt)
+{
+	int status;
+	u32 glk;
+	unsigned int i;
+	struct transaction *t;
+
+	t = &bt->base_transaction;
+
+	if (!ec || !is_valid_transaction(t))
+		return -EINVAL;
+	if (t->rdata)
+		memset(t->rdata, 0, t->rlen * bt->num_batches);
+
+	mutex_lock(&ec->mutex);
+	if (ec->global_lock) {
+		status = acpi_acquire_global_lock(ACPI_EC_UDELAY_GLK, &glk);
+		if (ACPI_FAILURE(status)) {
+			status = -ENODEV;
+			goto unlock;
+		}
+	}
+
+	for (i = 0; i < bt->num_batches; ++i) {
+		status = acpi_ec_transaction_unlocked(ec, t);
+		if (status < 0) {
+			break;
+		}
+
+		t->wdata += t->wlen;
+		t->rdata += t->rlen;
+	}
 
 	if (ec->global_lock)
 		acpi_release_global_lock(glk);
@@ -872,6 +930,22 @@ static int acpi_ec_read(struct acpi_ec *ec, u8 address, u8 *data)
 	result = acpi_ec_transaction(ec, &t);
 	*data = d;
 	return result;
+}
+
+static int acpi_ec_read_buf(struct acpi_ec *ec, const u8 *addr_buf, u8 *buf, size_t num)
+{
+	struct batch_transaction bt = {
+		.base_transaction = (struct transaction) {
+			.command = ACPI_EC_COMMAND_READ,
+			.wdata = addr_buf,
+			.rdata = buf,
+			.wlen = 1,
+			.rlen = 1,
+		},
+		.num_batches = num,
+	};
+
+	return acpi_ec_batch_transaction(ec, &bt);
 }
 
 static int acpi_ec_read_unlocked(struct acpi_ec *ec, u8 address, u8 *data)
@@ -924,6 +998,15 @@ int ec_read(u8 addr, u8 *val)
 	return err;
 }
 EXPORT_SYMBOL(ec_read);
+
+int ec_read_buffer(const u8 *addr_buf, u8 *buf, size_t num)
+{
+	if (!first_ec)
+		return -ENODEV;
+
+	return acpi_ec_read_buf(first_ec, addr_buf, buf, num);
+}
+EXPORT_SYMBOL(ec_read_buffer);
 
 int ec_write(u8 addr, u8 val)
 {

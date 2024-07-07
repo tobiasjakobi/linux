@@ -378,6 +378,7 @@ static inline void acpi_penalize_sci_irq(int irq, int trigger,
 void acpi_pci_irq_disable (struct pci_dev *dev);
 
 extern int ec_read(u8 addr, u8 *val);
+extern int ec_read_buffer(const u8 *addr_buf, u8 *buf, size_t num);
 extern int ec_write(u8 addr, u8 val);
 extern int ec_transaction(u8 command,
                           const u8 *wdata, unsigned wdata_len,
