@@ -37,9 +37,13 @@ static bool lock_global_acpi_lock(void)
 	return ACPI_SUCCESS(acpi_acquire_global_lock(ACPI_LOCK_DELAY_MS, &oxp_mutex));
 }
 
-static bool unlock_global_acpi_lock(void)
+static void unlock_global_acpi_lock(void)
 {
-	return ACPI_SUCCESS(acpi_release_global_lock(oxp_mutex));
+	/*
+	 * Ignore any errors when releasing the lock again. Rational is that we
+	 * can't do anything about the probleme here anyway.
+	 */
+	acpi_release_global_lock(oxp_mutex);
 }
 
 /* Fan reading and PWM */
@@ -281,28 +285,35 @@ static const struct dmi_system_id dmi_table[] = {
 };
 
 /* Helper functions to handle EC read/write */
-static int read_from_ec(u8 reg, int size, long *val)
+static int read_u8_from_ec(u8 reg, u8 *val)
 {
-	int i;
 	int ret;
-	u8 buffer;
 
 	if (!lock_global_acpi_lock())
 		return -EBUSY;
 
-	*val = 0;
-	for (i = 0; i < size; i++) {
-		ret = ec_read(reg + i, &buffer);
-		if (ret)
-			return ret;
-		*val <<= i * 8;
-		*val += buffer;
-	}
+	ret = ec_read(reg, val);
 
-	if (!unlock_global_acpi_lock())
+	unlock_global_acpi_lock();
+
+	return ret;
+}
+
+static int read_u16_from_ec(u8 reg, u16 *val)
+{
+	int ret;
+
+	/* Swap the two bytes already while reading. */
+	const u8 addr_buf[2] = {reg + 1, reg};
+
+	if (!lock_global_acpi_lock())
 		return -EBUSY;
 
-	return 0;
+	ret = ec_read_buffer(addr_buf, (u8 *)val, 2);
+
+	unlock_global_acpi_lock();
+
+	return ret;
 }
 
 static int write_to_ec(u8 reg, u8 value)
@@ -314,8 +325,7 @@ static int write_to_ec(u8 reg, u8 value)
 
 	ret = ec_write(reg, value);
 
-	if (!unlock_global_acpi_lock())
-		return -EBUSY;
+	unlock_global_acpi_lock();
 
 	return ret;
 }
@@ -324,10 +334,10 @@ static int pwm_auto_from_hw(struct oxp_data *data)
 {
 	const struct oxp_config *config = data->config;
 
-	long tmp;
+	u8 tmp;
 	int ret;
 
-	ret = read_from_ec(config->sensor_pwm_enable_reg, 1, &tmp);
+	ret = read_u8_from_ec(config->sensor_pwm_enable_reg, &tmp);
 	if (ret < 0)
 		return ret;
 
@@ -413,12 +423,12 @@ static ssize_t tt_toggle_show(struct device *dev,
 	struct oxp_data *data = dev_get_drvdata(dev);
 	const struct oxp_config *config = data->config;
 	int retval;
-	long val;
+	u8 val;
 
 	if (!test_bit(OXP_FEATURE_TURBO, &config->features))
 		return -EINVAL;
 
-	retval = read_from_ec(config->turbo_switch_reg, 1, &val);
+	retval = read_u8_from_ec(config->turbo_switch_reg, &val);
 	if (retval)
 		return retval;
 
@@ -496,17 +506,24 @@ static int oxp_platform_read(struct device *dev, enum hwmon_sensor_types type,
 
 	switch (type) {
 	case hwmon_fan:
-		if (attr == hwmon_fan_input && test_bit(OXP_FEATURE_SENSOR_FAN, &config->features))
-			return read_from_ec(config->sensor_fan_reg, 2, val);
+		if (attr == hwmon_fan_input && test_bit(OXP_FEATURE_SENSOR_FAN, &config->features)) {
+			u16 tmp;
+			int ret;
+
+			ret = read_u16_from_ec(config->sensor_fan_reg, &tmp);
+			*val = tmp;
+
+			return ret;
+		}
 		break;
 	case hwmon_pwm:
 		switch (attr) {
 		case hwmon_pwm_input:
 			if (test_bit(OXP_FEATURE_PWM, &config->features)) {
+				u8 tmp;
 				int ret;
-				long tmp;
 
-				ret = read_from_ec(config->sensor_pwm_reg, 1, &tmp);
+				ret = read_u8_from_ec(config->sensor_pwm_reg, &tmp);
 				if (ret)
 					return ret;
 
