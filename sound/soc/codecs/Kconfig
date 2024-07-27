@@ -709,6 +709,14 @@ config SND_SOC_AW88399
 	  digital Smart K audio amplifier and SKTune speaker
 	  protection algorithms.
 
+config SND_SOC_AW87XXX
+	tristate "SoC Audio for awinic aw87XXX"
+	depends on I2C
+	select REGMAP_I2C
+	select GPIOLIB
+	help
+	  This option enables support for AW87XXX Smart K PA.
+
 config SND_SOC_BD28623
 	tristate "ROHM BD28623 CODEC"
 	help
@@ -2596,5 +2604,4 @@ config SND_SOC_LPASS_TX_MACRO
 	select SND_SOC_LPASS_MACRO_COMMON
 	tristate "Qualcomm TX Macro in LPASS(Low Power Audio SubSystem)"
 
-source "sound/soc/codecs/aw87xxx/Kconfig"
 endmenu

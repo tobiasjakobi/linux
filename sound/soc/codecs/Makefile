@@ -54,6 +54,12 @@ snd-soc-aw88395-y := aw88395/aw88395.o \
 			aw88395/aw88395_device.o
 snd-soc-aw88261-y := aw88261.o
 snd-soc-aw88399-y := aw88399.o
+snd-soc-aw87xxx-y := aw87xxx/aw87xxx.o \
+			aw87xxx/aw_acf_bin.o \
+			aw87xxx/aw_bin_parse.o \
+			aw87xxx/aw_device.o \
+			aw87xxx/aw_dsp.o \
+			aw87xxx/aw_monitor.o
 snd-soc-bd28623-y := bd28623.o
 snd-soc-bt-sco-y := bt-sco.o
 snd-soc-chv3-codec-y := chv3-codec.o
@@ -461,6 +467,7 @@ obj-$(CONFIG_SND_SOC_AW88395_LIB) += snd-soc-aw88395-lib.o
 obj-$(CONFIG_SND_SOC_AW88395)	+=snd-soc-aw88395.o
 obj-$(CONFIG_SND_SOC_AW88261)	+=snd-soc-aw88261.o
 obj-$(CONFIG_SND_SOC_AW88399)	+= snd-soc-aw88399.o
+obj-$(CONFIG_SND_SOC_AW87XXX)	+= snd-soc-aw87xxx.o
 obj-$(CONFIG_SND_SOC_BD28623)	+= snd-soc-bd28623.o
 obj-$(CONFIG_SND_SOC_BT_SCO)	+= snd-soc-bt-sco.o
 obj-$(CONFIG_SND_SOC_CHV3_CODEC) += snd-soc-chv3-codec.o
@@ -808,7 +815,6 @@ obj-$(CONFIG_SND_SOC_WSA884X)	+= snd-soc-wsa884x.o
 obj-$(CONFIG_SND_SOC_ZL38060)	+= snd-soc-zl38060.o
 
 # Amp
-obj-$(CONFIG_SND_SOC_AW87XXX)	+= aw87xxx/
 obj-$(CONFIG_SND_SOC_MAX9877)	+= snd-soc-max9877.o
 obj-$(CONFIG_SND_SOC_MAX98504)	+= snd-soc-max98504.o
 obj-$(CONFIG_SND_SOC_SIMPLE_AMPLIFIER)	+= snd-soc-simple-amplifier.o
