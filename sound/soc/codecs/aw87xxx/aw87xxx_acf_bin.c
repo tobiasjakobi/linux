@@ -1,5 +1,5 @@
 /*
- * aw_acf_bin.c
+ * aw87xxx_acf_bin.c
  *
  * Copyright (c) 2021 AWINIC Technology CO., LTD
  *
@@ -21,10 +21,10 @@
 #include <linux/kernel.h>
 #include <linux/vmalloc.h>
 #include "aw87xxx.h"
-#include "aw_acf_bin.h"
-#include "aw_monitor.h"
-#include "aw_log.h"
-#include "aw_bin_parse.h"
+#include "aw87xxx_acf_bin.h"
+#include "aw87xxx_monitor.h"
+#include "aw87xxx_log.h"
+#include "aw87xxx_bin_parse.h"
 
 static char *g_profile_name[] = {"Music", "Voice", "Voip",
 		"Ringtone", "Ringtone_hs", "Lowpower", "Bypass", "Mmi",
@@ -412,7 +412,7 @@ static int aw_parse_reg_with_hdr(struct device *dev, uint8_t *data,
 	aw_bin->info.len = data_len;
 	memcpy(aw_bin->info.data, data, data_len);
 
-	ret = aw_parsing_bin_file(aw_bin);
+	ret = aw87xxx_parsing_bin_file(aw_bin);
 	if (ret < 0) {
 		AW_DEV_LOGE(dev, "parse bin failed");
 		goto parse_bin_failed;
@@ -450,7 +450,7 @@ static int aw_parse_monitor_config(struct device *dev,
 		return -EBFONT;
 	}
 
-	ret = aw_monitor_bin_parse(dev, monitor_data, data_len);
+	ret = aw87xxx_monitor_bin_parse(dev, monitor_data, data_len);
 	if (ret < 0) {
 		AW_DEV_LOGE(dev, "monitor_config parse failed");
 		return ret;
@@ -807,7 +807,7 @@ static int aw_parse_acf_v_0_0_0_1(struct device *dev,
 
 	ret = aw_get_vaild_prof_v_0_0_0_1(dev, acf_info, &all_prof_info);
 	if (ret < 0) {
-		aw_acf_profile_free(dev, acf_info);
+		aw87xxx_acf_profile_free(dev, acf_info);
 		AW_DEV_LOGE(dev,  "hdr_cersion[0x%x] parse failed",
 					acf_info->acf_hdr.hdr_version);
 		return ret;
@@ -815,7 +815,7 @@ static int aw_parse_acf_v_0_0_0_1(struct device *dev,
 
 	ret = aw_set_prof_name_list_v_0_0_0_1(dev, acf_info);
 	if (ret < 0) {
-		aw_acf_profile_free(dev, acf_info);
+		aw87xxx_acf_profile_free(dev, acf_info);
 		AW_DEV_LOGE(dev,  "creat prof_id_and_name_list failed");
 		return ret;
 	}
@@ -1391,7 +1391,7 @@ static int aw_parse_acf_v_1_0_0_0(struct device *dev,
  *acf parse API
  *
  *************************************************************************/
-void aw_acf_profile_free(struct device *dev, struct acf_bin_info *acf_info)
+void aw87xxx_acf_profile_free(struct device *dev, struct acf_bin_info *acf_info)
 {
 	struct aw_prof_info *prof_info = &acf_info->prof_info;
 
@@ -1415,7 +1415,7 @@ void aw_acf_profile_free(struct device *dev, struct acf_bin_info *acf_info)
 	}
 }
 
-int aw_acf_parse(struct device *dev, struct acf_bin_info *acf_info)
+int aw87xxx_acf_parse(struct device *dev, struct acf_bin_info *acf_info)
 {
 	int ret = 0;
 
@@ -1445,7 +1445,7 @@ int aw_acf_parse(struct device *dev, struct acf_bin_info *acf_info)
 	return ret;
 }
 
-struct aw_prof_desc *aw_acf_get_prof_desc_form_name(struct device *dev,
+struct aw_prof_desc *aw87xxx_acf_get_prof_desc_form_name(struct device *dev,
 			struct acf_bin_info *acf_info, char *profile_name)
 {
 	int i = 0;
@@ -1476,7 +1476,7 @@ struct aw_prof_desc *aw_acf_get_prof_desc_form_name(struct device *dev,
 	return prof_desc;
 }
 
-int aw_acf_get_prof_index_form_name(struct device *dev,
+int aw87xxx_acf_get_prof_index_form_name(struct device *dev,
 			struct acf_bin_info *acf_info, char *profile_name)
 {
 	int i = 0;
@@ -1498,7 +1498,7 @@ int aw_acf_get_prof_index_form_name(struct device *dev,
 	return -EINVAL;
 }
 
-char *aw_acf_get_prof_name_form_index(struct device *dev,
+char *aw87xxx_acf_get_prof_name_form_index(struct device *dev,
 			struct acf_bin_info *acf_info, int index)
 {
 	struct aw_prof_info *prof_info = &acf_info->prof_info;
@@ -1517,7 +1517,7 @@ char *aw_acf_get_prof_name_form_index(struct device *dev,
 }
 
 
-int aw_acf_get_profile_count(struct device *dev,
+int aw87xxx_acf_get_profile_count(struct device *dev,
 			struct acf_bin_info *acf_info)
 {
 	struct aw_prof_info *prof_info = &acf_info->prof_info;
@@ -1534,7 +1534,7 @@ int aw_acf_get_profile_count(struct device *dev,
 	return -EINVAL;
 }
 
-char *aw_acf_get_prof_off_name(struct device *dev,
+char *aw87xxx_acf_get_prof_off_name(struct device *dev,
 			struct acf_bin_info *acf_info)
 {
 	int i = 0;
@@ -1555,7 +1555,7 @@ char *aw_acf_get_prof_off_name(struct device *dev,
 	return NULL;
 }
 
-void aw_acf_init(struct aw_device *aw_dev, struct acf_bin_info *acf_info, int index)
+void aw87xxx_acf_init(struct aw_device *aw_dev, struct acf_bin_info *acf_info, int index)
 {
 
 	acf_info->load_count = 0;

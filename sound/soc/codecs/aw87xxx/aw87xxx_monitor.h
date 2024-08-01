@@ -1,7 +1,7 @@
 /* SPDX-License-Identifier: GPL-2.0+ */
 
-#ifndef __AW_MONITOR_H__
-#define __AW_MONITOR_H__
+#ifndef __AW87XXX_MONITOR_H__
+#define __AW87XXX_MONITOR_H__
 
 #define AW_WAIT_DSP_OPEN_TIME			(3000)
 #define AW_VBAT_CAPACITY_MIN			(0)
@@ -17,7 +17,7 @@
 #define AW_ESD_ENABLE				(true)
 #define AW_ESD_DISABLE				(false)
 
-enum aw_monitor_init {
+enum aw87xxx_monitor_init {
 	AW_MONITOR_CFG_WAIT = 0,
 	AW_MONITOR_CFG_OK = 1,
 };
@@ -82,14 +82,14 @@ struct aw_monitor {
 	struct delayed_work with_dsp_work;
 };
 
-void aw_monitor_cfg_free(struct aw_monitor *monitor);
-int aw_monitor_bin_parse(struct device *dev,
+void aw87xxx_monitor_cfg_free(struct aw_monitor *monitor);
+int aw87xxx_monitor_bin_parse(struct device *dev,
 			char *monitor_data, uint32_t data_len);
-void aw_monitor_stop(struct aw_monitor *monitor);
-void aw_monitor_start(struct aw_monitor *monitor);
-int aw_monitor_no_dsp_get_vmax(struct aw_monitor *monitor,
+void aw87xxx_monitor_stop(struct aw_monitor *monitor);
+void aw87xxx_monitor_start(struct aw_monitor *monitor);
+int aw87xxx_monitor_cfg_free(struct aw_monitor *monitor,
 					int32_t *vmax);
-void aw_monitor_init(struct device *dev, struct aw_monitor *monitor,
+void aw87xxx_monitor_init(struct device *dev, struct aw_monitor *monitor,
 				struct device_node *dev_node);
-void aw_monitor_exit(struct aw_monitor *monitor);
+void aw87xxx_monitor_exit(struct aw_monitor *monitor);
 #endif

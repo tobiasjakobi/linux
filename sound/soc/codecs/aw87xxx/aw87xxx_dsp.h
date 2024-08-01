@@ -1,7 +1,7 @@
 /* SPDX-License-Identifier: GPL-2.0+ */
 
-#ifndef __AW_DSP_H__
-#define __AW_DSP_H__
+#ifndef __AW87XXX_DSP_H__
+#define __AW87XXX_DSP_H__
 
 /*#define AW_MTK_OPEN_DSP_PLATFORM*/
 /*#define AW_QCOM_OPEN_DSP_PLATFORM*/
@@ -41,10 +41,10 @@ enum aw_dsp_channel {
 	AW_DSP_CHANNEL_MAX,
 };
 
-uint8_t aw_dsp_isEnable(void);
-int aw_dsp_get_rx_module_enable(int *enable);
-int aw_dsp_set_rx_module_enable(int enable);
-int aw_dsp_get_vmax(uint32_t *vmax, int channel);
-int aw_dsp_set_vmax(uint32_t vmax, int channel);
+uint8_t aw87xxx_dsp_isEnable(void);
+int aw87xxx_dsp_get_rx_module_enable(int *enable);
+int aw87xxx_dsp_set_rx_module_enable(int enable);
+int aw87xxx_dsp_get_vmax(uint32_t *vmax, int channel);
+int aw87xxx_dsp_set_vmax(uint32_t vmax, int channel);
 
 #endif

@@ -45,11 +45,11 @@
 #include <sound/control.h>
 #include <sound/soc.h>
 #include "aw87xxx.h"
-#include "aw_device.h"
-#include "aw_log.h"
-#include "aw_monitor.h"
-#include "aw_acf_bin.h"
-#include "aw_bin_parse.h"
+#include "aw87xxx_device.h"
+#include "aw87xxx_log.h"
+#include "aw87xxx_monitor.h"
+#include "aw87xxx_acf_bin.h"
+#include "aw87xxx_bin_parse.h"
 
 /*****************************************************************
 * aw87xxx marco
@@ -94,9 +94,9 @@ static int aw87xxx_update_off_prof(struct aw87xxx *aw87xxx, char *profile)
 
 	mutex_lock(&aw87xxx->reg_lock);
 
-	aw_monitor_stop(&aw87xxx->monitor);
+	aw87xxx_monitor_stop(&aw87xxx->monitor);
 
-	prof_desc = aw_acf_get_prof_desc_form_name(aw87xxx->dev, &aw87xxx->acf_info, profile);
+	prof_desc = aw87xxx_acf_get_prof_desc_form_name(aw87xxx->dev, &aw87xxx->acf_info, profile);
 	if (prof_desc == NULL)
 		goto no_bin_pwr_off;
 
@@ -118,7 +118,7 @@ static int aw87xxx_update_off_prof(struct aw87xxx *aw87xxx, char *profile)
 				goto pwr_off_failed;
 			}
 		} else {
-			ret = aw_dev_default_pwr_off(aw_dev, data_container);
+			ret = aw87xxx_dev_default_pwr_off(aw_dev, data_container);
 			if (ret < 0) {
 				AW_DEV_LOGE(aw87xxx->dev, "load profile[%s] failed ", profile);
 				goto pwr_off_failed;
@@ -133,7 +133,7 @@ static int aw87xxx_update_off_prof(struct aw87xxx *aw87xxx, char *profile)
 
 pwr_off_failed:
 no_bin_pwr_off:
-	aw_dev_hw_pwr_ctrl(&aw87xxx->aw_dev, false);
+	aw87xxx_dev_hw_pwr_ctrl(&aw87xxx->aw_dev, false);
 	aw87xxx->current_profile = aw87xxx->prof_off_name;
 	mutex_unlock(&aw87xxx->reg_lock);
 	return ret;
@@ -159,7 +159,7 @@ int aw87xxx_update_profile(struct aw87xxx *aw87xxx, char *profile)
 
 	mutex_lock(&aw87xxx->reg_lock);
 
-	prof_desc = aw_acf_get_prof_desc_form_name(aw87xxx->dev, &aw87xxx->acf_info, profile);
+	prof_desc = aw87xxx_acf_get_prof_desc_form_name(aw87xxx->dev, &aw87xxx->acf_info, profile);
 	if (prof_desc == NULL) {
 		AW_DEV_LOGE(aw87xxx->dev, "not found [%s] parameter", profile);
 		mutex_unlock(&aw87xxx->reg_lock);
@@ -176,7 +176,7 @@ int aw87xxx_update_profile(struct aw87xxx *aw87xxx, char *profile)
 	AW_DEV_LOGD(aw87xxx->dev, "get profile[%s] data len [%d]",
 			profile, data_container->len);
 
-	aw_monitor_stop(&aw87xxx->monitor);
+	aw87xxx_monitor_stop(&aw87xxx->monitor);
 
 	if (aw_dev->ops.pwr_on_func) {
 		ret = aw_dev->ops.pwr_on_func(aw_dev, data_container);
@@ -187,7 +187,7 @@ int aw87xxx_update_profile(struct aw87xxx *aw87xxx, char *profile)
 			return aw87xxx_update_off_prof(aw87xxx, aw87xxx->prof_off_name);
 		}
 	} else {
-		ret = aw_dev_default_pwr_on(aw_dev, data_container);
+		ret = aw87xxx_dev_default_pwr_on(aw_dev, data_container);
 		if (ret < 0) {
 			AW_DEV_LOGE(aw87xxx->dev, "load profile[%s] failed ",
 				profile);
@@ -197,7 +197,7 @@ int aw87xxx_update_profile(struct aw87xxx *aw87xxx, char *profile)
 	}
 
 	aw87xxx->current_profile = prof_desc->prof_name;
-	aw_monitor_start(&aw87xxx->monitor);
+	aw87xxx_monitor_start(&aw87xxx->monitor);
 	mutex_unlock(&aw87xxx->reg_lock);
 
 	AW_DEV_LOGD(aw87xxx->dev, "load profile[%s] succeed", profile);
@@ -263,7 +263,7 @@ static int aw87xxx_esd_update_off_prof(struct aw87xxx *aw87xxx, char *profile)
 	struct aw_device *aw_dev = &aw87xxx->aw_dev;
 
 	AW_DEV_LOGD(aw87xxx->dev, "enter");
-	prof_desc = aw_acf_get_prof_desc_form_name(aw87xxx->dev, &aw87xxx->acf_info, profile);
+	prof_desc = aw87xxx_acf_get_prof_desc_form_name(aw87xxx->dev, &aw87xxx->acf_info, profile);
 	if (prof_desc == NULL)
 		goto no_bin_pwr_off;
 
@@ -284,7 +284,7 @@ static int aw87xxx_esd_update_off_prof(struct aw87xxx *aw87xxx, char *profile)
 				goto pwr_off_failed;
 			}
 		} else {
-			ret = aw_dev_default_pwr_off(aw_dev, data_container);
+			ret = aw87xxx_dev_default_pwr_off(aw_dev, data_container);
 			if (ret < 0) {
 				AW_DEV_LOGE(aw87xxx->dev, "load profile[%s] failed ", profile);
 				goto pwr_off_failed;
@@ -297,7 +297,7 @@ static int aw87xxx_esd_update_off_prof(struct aw87xxx *aw87xxx, char *profile)
 
 pwr_off_failed:
 no_bin_pwr_off:
-	aw_dev_hw_pwr_ctrl(&aw87xxx->aw_dev, false);
+	aw87xxx_dev_hw_pwr_ctrl(&aw87xxx->aw_dev, false);
 	aw87xxx->current_profile = aw87xxx->prof_off_name;
 	return ret;
 }
@@ -320,7 +320,7 @@ int aw87xxx_esd_update_profile(struct aw87xxx *aw87xxx, char *profile)
 	if (0 == strncmp(profile, aw87xxx->prof_off_name, AW_PROFILE_STR_MAX))
 		return aw87xxx_esd_update_off_prof(aw87xxx, profile);
 
-	prof_desc = aw_acf_get_prof_desc_form_name(aw87xxx->dev, &aw87xxx->acf_info,
+	prof_desc = aw87xxx_acf_get_prof_desc_form_name(aw87xxx->dev, &aw87xxx->acf_info,
 					profile);
 	if (prof_desc == NULL) {
 		AW_DEV_LOGE(aw87xxx->dev, "not found [%s] parameter", profile);
@@ -344,7 +344,7 @@ int aw87xxx_esd_update_profile(struct aw87xxx *aw87xxx, char *profile)
 			return ret;
 		}
 	} else {
-		ret = aw_dev_default_pwr_on(aw_dev, data_container);
+		ret = aw87xxx_dev_default_pwr_on(aw_dev, data_container);
 		if (ret < 0) {
 			AW_DEV_LOGE(aw87xxx->dev, "load profile[%s] failed ",
 				profile);
@@ -379,7 +379,7 @@ static int aw87xxx_profile_switch_info(struct snd_kcontrol *kcontrol,
 	uinfo->count = 1;
 
 	/*make sure have prof */
-	count = aw_acf_get_profile_count(aw87xxx->dev, &aw87xxx->acf_info);
+	count = aw87xxx_acf_get_profile_count(aw87xxx->dev, &aw87xxx->acf_info);
 	if (count <= 0) {
 		uinfo->value.enumerated.items = 0;
 		AW_DEV_LOGE(aw87xxx->dev, "get count[%d] failed", count);
@@ -392,7 +392,7 @@ static int aw87xxx_profile_switch_info(struct snd_kcontrol *kcontrol,
 
 	name = uinfo->value.enumerated.name;
 	count = uinfo->value.enumerated.item;
-	profile_name = aw_acf_get_prof_name_form_index(aw87xxx->dev,
+	profile_name = aw87xxx_acf_get_prof_name_form_index(aw87xxx->dev,
 		&aw87xxx->acf_info, count);
 	if (profile_name == NULL) {
 		strlcpy(uinfo->value.enumerated.name, "NULL",
@@ -419,7 +419,7 @@ static int aw87xxx_profile_switch_put(struct snd_kcontrol *kcontrol,
 		return -EINVAL;
 	}
 
-	profile_name = aw_acf_get_prof_name_form_index(aw87xxx->dev, acf_info, index);
+	profile_name = aw87xxx_acf_get_prof_name_form_index(aw87xxx->dev, acf_info, index);
 	if (!profile_name) {
 		AW_DEV_LOGE(aw87xxx->dev, "not found profile name,index=[%d]",
 				index);
@@ -460,7 +460,7 @@ static int aw87xxx_profile_switch_get(struct snd_kcontrol *kcontrol,
 		aw87xxx->current_profile);
 
 
-	index = aw_acf_get_prof_index_form_name(aw87xxx->dev,
+	index = aw87xxx_acf_get_prof_index_form_name(aw87xxx->dev,
 		&aw87xxx->acf_info, aw87xxx->current_profile);
 	if (index < 0) {
 		AW_DEV_LOGE(aw87xxx->dev, "get profile index failed");
@@ -483,7 +483,7 @@ static int aw87xxx_vmax_get_info(struct snd_kcontrol *kcontrol,
 	return 0;
 }
 
-static int aw87xxxx_vmax_get(struct snd_kcontrol *kcontrol,
+static int aw87xxx_vmax_get(struct snd_kcontrol *kcontrol,
 			struct snd_ctl_elem_value *ucontrol)
 {
 	int ret = -1;
@@ -495,7 +495,7 @@ static int aw87xxxx_vmax_get(struct snd_kcontrol *kcontrol,
 		return -EINVAL;
 	}
 
-	ret = aw_monitor_no_dsp_get_vmax(&aw87xxx->monitor, &vmax_val);
+	ret = aw87xxx_monitor_cfg_free(&aw87xxx->monitor, &vmax_val);
 	if (ret < 0)
 		return ret;
 
@@ -552,7 +552,7 @@ static int aw87xxx_kcontrol_dynamic_create(struct aw87xxx *aw87xxx,
 	aw87xxx_kcontrol[1].iface = SNDRV_CTL_ELEM_IFACE_MIXER;
 	aw87xxx_kcontrol[1].access = SNDRV_CTL_ELEM_ACCESS_READ;
 	aw87xxx_kcontrol[1].info = aw87xxx_vmax_get_info;
-	aw87xxx_kcontrol[1].get = aw87xxxx_vmax_get;
+	aw87xxx_kcontrol[1].get = aw87xxx_vmax_get;
 	aw87xxx_kcontrol[1].private_value = (unsigned long)aw87xxx;
 
 	ret = aw_componet_codec_ops.add_codec_controls(aw87xxx->codec,
@@ -606,15 +606,15 @@ EXPORT_SYMBOL(aw87xxx_add_codec_controls);
 static void aw87xxx_fw_cfg_free(struct aw87xxx *aw87xxx)
 {
 	AW_DEV_LOGD(aw87xxx->dev, "enter");
-	aw_acf_profile_free(aw87xxx->dev, &aw87xxx->acf_info);
-	aw_monitor_cfg_free(&aw87xxx->monitor);
+	aw87xxx_acf_profile_free(aw87xxx->dev, &aw87xxx->acf_info);
+	aw87xxx_monitor_cfg_free(&aw87xxx->monitor);
 }
 
 static int aw87xxx_init_default_prof(struct aw87xxx *aw87xxx)
 {
 	char *profile = NULL;
 
-	profile = aw_acf_get_prof_off_name(aw87xxx->dev, &aw87xxx->acf_info);
+	profile = aw87xxx_acf_get_prof_off_name(aw87xxx->dev, &aw87xxx->acf_info);
 	if (profile == NULL) {
 		AW_DEV_LOGE(aw87xxx->dev, "get profile off name failed");
 		return -EINVAL;
@@ -676,7 +676,7 @@ static void aw87xxx_fw_load(const struct firmware *fw, void *context)
 	memcpy(acf_info->fw_data, fw->data, fw->size);
 	acf_info->fw_size = fw->size;
 
-	ret = aw_acf_parse(aw87xxx->dev, &aw87xxx->acf_info);
+	ret = aw87xxx_acf_parse(aw87xxx->dev, &aw87xxx->acf_info);
 	if (ret < 0) {
 		AW_DEV_LOGE(aw87xxx->dev, "fw_data parse failed");
 		goto exit_acf_parse_failed;
@@ -728,7 +728,7 @@ static void aw87xxx_fw_load_init(struct aw87xxx *aw87xxx)
 #endif
 	AW_DEV_LOGI(aw87xxx->dev, "enter");
 	snprintf(aw87xxx->fw_name, AW87XXX_FW_NAME_MAX, "%s", AW87XXX_FW_BIN_NAME);
-	aw_acf_init(&aw87xxx->aw_dev, &aw87xxx->acf_info, aw87xxx->dev_index);
+	aw87xxx_acf_init(&aw87xxx->aw_dev, &aw87xxx->acf_info, aw87xxx->dev_index);
 
 	INIT_DELAYED_WORK(&aw87xxx->fw_load_work, aw87xxx_fw_load_work_routine);
 	schedule_delayed_work(&aw87xxx->fw_load_work,
@@ -754,7 +754,7 @@ static ssize_t aw87xxx_attr_get_reg(struct device *dev,
 	for (i = 0; i < aw_dev->reg_max_addr; i++) {
 		if (!(aw_dev->reg_access[i] & AW_DEV_REG_RD_ACCESS))
 			continue;
-		ret = aw_dev_i2c_read_byte(&aw87xxx->aw_dev, i, &reg_val);
+		ret = aw87xxx_dev_i2c_read_byte(&aw87xxx->aw_dev, i, &reg_val);
 		if (ret < 0) {
 			len += snprintf(buf + len, PAGE_SIZE - len,
 					"read reg [0x%x] failed\n", i);
@@ -788,7 +788,7 @@ static ssize_t aw87xxx_attr_set_reg(struct device *dev,
 			return -EINVAL;
 		}
 
-		ret = aw_dev_i2c_write_byte(&aw87xxx->aw_dev,
+		ret = aw87xxx_dev_i2c_write_byte(&aw87xxx->aw_dev,
 					databuf[0], databuf[1]);
 		if (ret < 0)
 			AW_DEV_LOGE(aw87xxx->dev, "set [0x%x]=0x%x failed",
@@ -887,9 +887,9 @@ static ssize_t aw87xxx_attr_set_hwen(struct device *dev,
 
 	mutex_lock(&aw87xxx->reg_lock);
 	if (state == AW_DEV_HWEN_OFF)
-		aw_dev_hw_pwr_ctrl(&aw87xxx->aw_dev, false); /*OFF*/
+		aw87xxx_dev_hw_pwr_ctrl(&aw87xxx->aw_dev, false); /*OFF*/
 	else if (state == AW_DEV_HWEN_ON)
-		aw_dev_hw_pwr_ctrl(&aw87xxx->aw_dev, true); /*ON*/
+		aw87xxx_dev_hw_pwr_ctrl(&aw87xxx->aw_dev, true); /*ON*/
 	else
 		AW_DEV_LOGE(aw87xxx->dev, "input [%d] error, hwen_on=[%d],hwen_off=[%d]",
 			state, AW_DEV_HWEN_ON, AW_DEV_HWEN_OFF);
@@ -1081,7 +1081,7 @@ static ssize_t aw87xxx_attr_awrw_show(struct device *dev,
 	}
 
 	mutex_lock(&aw87xxx->reg_lock);
-	ret = aw_dev_i2c_read_msg(&aw87xxx->aw_dev, packet->reg_addr,
+	ret = aw87xxx_dev_i2c_read_msg(&aw87xxx->aw_dev, packet->reg_addr,
 				(char *)reg_data, data_len);
 	if (ret < 0) {
 		ret = -EFAULT;
@@ -1308,10 +1308,10 @@ static int aw87xxx_i2c_probe(struct i2c_client *client,
 		goto exit;
 
 	/*hw power on PA*/
-	aw_dev_hw_pwr_ctrl(&aw87xxx->aw_dev, true);
+	aw87xxx_dev_hw_pwr_ctrl(&aw87xxx->aw_dev, true);
 
 	/* aw87xxx devices private attributes init */
-	ret = aw_dev_init(&aw87xxx->aw_dev);
+	ret = aw87xxx_dev_init(&aw87xxx->aw_dev);
 	if (ret < 0)
 		goto exit;
 
@@ -1324,10 +1324,10 @@ static int aw87xxx_i2c_probe(struct i2c_client *client,
 	}
 
 	/*product register reset */
-	aw_dev_soft_reset(&aw87xxx->aw_dev);
+	aw87xxx_dev_soft_reset(&aw87xxx->aw_dev);
 
 	/*hw power off */
-	aw_dev_hw_pwr_ctrl(&aw87xxx->aw_dev, false);
+	aw87xxx_dev_hw_pwr_ctrl(&aw87xxx->aw_dev, false);
 
 	/* create debug attrbute nodes */
 	ret = sysfs_create_group(&aw87xxx->dev->kobj, &aw87xxx_attribute_group);
@@ -1338,7 +1338,7 @@ static int aw87xxx_i2c_probe(struct i2c_client *client,
 	aw87xxx_fw_load_init(aw87xxx);
 
 	/*monitor init*/
-	aw_monitor_init(aw87xxx->dev, &aw87xxx->monitor, dev_node);
+	aw87xxx_monitor_init(aw87xxx->dev, &aw87xxx->monitor, dev_node);
 
 	/*add device to total list */
 	mutex_lock(&g_aw87xxx_mutex_lock);
@@ -1358,7 +1358,7 @@ static int aw87xxx_i2c_remove(struct i2c_client *client)
 {
 	struct aw87xxx *aw87xxx = i2c_get_clientdata(client);
 
-	aw_monitor_exit(&aw87xxx->monitor);
+	aw87xxx_monitor_exit(&aw87xxx->monitor);
 
 	/*rm attr node*/
 	sysfs_remove_group(&aw87xxx->dev->kobj, &aw87xxx_attribute_group);

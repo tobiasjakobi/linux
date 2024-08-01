@@ -20,8 +20,8 @@
 #include <linux/hrtimer.h>
 #include <linux/proc_fs.h>
 #include <linux/init.h>
-#include "aw_log.h"
-#include "aw_dsp.h"
+#include "aw87xxx_log.h"
+#include "aw87xxx_dsp.h"
 
 static DEFINE_MUTEX(g_dsp_lock);
 
@@ -64,7 +64,7 @@ static int aw_send_afe_cal_apr(uint32_t param_id,
 */
 #endif
 
-uint8_t aw_dsp_isEnable(void)
+uint8_t aw87xxx_dsp_isEnable(void)
 {
 #if (defined AW_QCOM_OPEN_DSP_PLATFORM) || (defined AW_MTK_OPEN_DSP_PLATFORM)
 	return true;
@@ -209,7 +209,7 @@ static int aw_qcom_read_data_from_dsp(int32_t param_id,
 #endif
 /*****************qcom dsp communication function end*********************/
 
-int aw_dsp_get_rx_module_enable(int *enable)
+int aw87xxx_dsp_get_rx_module_enable(int *enable)
 {
 	int ret = 0;
 
@@ -229,7 +229,7 @@ int aw_dsp_get_rx_module_enable(int *enable)
 	return ret;
 }
 
-int aw_dsp_set_rx_module_enable(int enable)
+int aw87xxx_dsp_set_rx_module_enable(int enable)
 {
 	int ret = 0;
 
@@ -257,7 +257,7 @@ int aw_dsp_set_rx_module_enable(int enable)
 }
 
 
-int aw_dsp_get_vmax(uint32_t *vmax, int dev_index)
+int aw87xxx_dsp_get_vmax(uint32_t *vmax, int dev_index)
 {
 	int ret  = 0;
 	int32_t param_id = 0;
@@ -285,7 +285,7 @@ int aw_dsp_get_vmax(uint32_t *vmax, int dev_index)
 	return ret;
 }
 
-int aw_dsp_set_vmax(uint32_t vmax, int dev_index)
+int aw87xxx_dsp_set_vmax(uint32_t vmax, int dev_index)
 {
 	int ret = 0;
 	int32_t param_id = 0;

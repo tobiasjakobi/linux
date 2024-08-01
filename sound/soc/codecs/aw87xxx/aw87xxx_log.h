@@ -1,7 +1,7 @@
 /* SPDX-License-Identifier: GPL-2.0+ */
 
-#ifndef __AW_LOG_H__
-#define __AW_LOG_H__
+#ifndef __AW87XXX_LOG_H__
+#define __AW87XXX_LOG_H__
 
 #include <linux/kernel.h>
 

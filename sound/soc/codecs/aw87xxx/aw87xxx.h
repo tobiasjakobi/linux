@@ -7,9 +7,9 @@
 #include <sound/control.h>
 #include <sound/soc.h>
 
-#include "aw_device.h"
-#include "aw_monitor.h"
-#include "aw_acf_bin.h"
+#include "aw87xxx_device.h"
+#include "aw87xxx_monitor.h"
+#include "aw87xxx_acf_bin.h"
 
 #define AW_CFG_UPDATE_DELAY
 #define AW_CFG_UPDATE_DELAY_TIMER	(3000)

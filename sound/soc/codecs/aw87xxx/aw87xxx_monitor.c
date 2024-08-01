@@ -1,5 +1,5 @@
 /*
- * aw_monitor.c
+ * aw87xxx_monitor.c
  *
  * Copyright (c) 2021 AWINIC Technology CO., LTD
  *
@@ -38,11 +38,11 @@
 #include <linux/mutex.h>
 #include <linux/workqueue.h>
 #include "aw87xxx.h"
-#include "aw_log.h"
-#include "aw_monitor.h"
-#include "aw_dsp.h"
-#include "aw_bin_parse.h"
-#include "aw_device.h"
+#include "aw87xxx_log.h"
+#include "aw87xxx_monitor.h"
+#include "aw87xxx_dsp.h"
+#include "aw87xxx_bin_parse.h"
+#include "aw87xxx_device.h"
 
 #define AW_MONITOT_BIN_PARSE_VERSION	"V0.1.0"
 
@@ -334,7 +334,7 @@ static int aw_monitor_parse_v_1_0_0(struct device *dev,
 	return 0;
 }
 
-void aw_monitor_cfg_free(struct aw_monitor *monitor)
+void aw87xxx_monitor_cfg_free(struct aw_monitor *monitor)
 {
 	struct aw87xxx *aw87xxx =
 		container_of(monitor, struct aw87xxx, monitor);
@@ -348,7 +348,7 @@ void aw_monitor_cfg_free(struct aw_monitor *monitor)
 	}
 }
 
-int aw_monitor_bin_parse(struct device *dev,
+int aw87xxx_monitor_bin_parse(struct device *dev,
 				char *monitor_data, uint32_t data_len)
 {
 	int ret = -1;
@@ -379,7 +379,7 @@ int aw_monitor_bin_parse(struct device *dev,
 		ret = aw_monitor_parse_v_1_0_0(dev, monitor,
 				monitor_data);
 		if (ret < 0) {
-			aw_monitor_cfg_free(monitor);
+			aw87xxx_monitor_cfg_free(monitor);
 			return ret;
 		}
 		break;
@@ -508,7 +508,7 @@ static int aw_monitor_chip_esd_check_work(struct aw87xxx *aw87xxx)
 	for (i = 0; i < REG_STATUS_CHECK_MAX; i++) {
 		AW_DEV_LOGD(aw87xxx->dev, "reg_status_check[%d]", i);
 
-		ret = aw_dev_esd_reg_status_check(&aw87xxx->aw_dev);
+		ret = aw87xxx_dev_esd_reg_status_check(&aw87xxx->aw_dev);
 		if (ret < 0) {
 			aw_chip_status_recover(aw87xxx);
 		} else {
@@ -540,14 +540,14 @@ static int aw_monitor_update_vmax_to_dsp(struct device *dev,
 	uint32_t enable = 0;
 
 	if (monitor->pre_vmax != vmax_set) {
-		ret = aw_dsp_get_rx_module_enable(&enable);
+		ret = aw87xxx_dsp_get_rx_module_enable(&enable);
 		if (!enable || ret < 0) {
 			AW_DEV_LOGE(dev, "get rx failed or rx disable, ret=%d, enable=%d",
 				ret, enable);
 			return -EPERM;
 		}
 
-		ret = aw_dsp_set_vmax(vmax_set, monitor->dev_index);
+		ret = aw87xxx_dsp_set_vmax(vmax_set, monitor->dev_index);
 		if (ret) {
 			AW_DEV_LOGE(dev, "set dsp msg fail, ret=%d", ret);
 			return ret;
@@ -637,7 +637,7 @@ static void aw_monitor_work_func(struct work_struct *work)
 	}
 }
 
-void aw_monitor_stop(struct aw_monitor *monitor)
+void aw87xxx_monitor_stop(struct aw_monitor *monitor)
 {
 	struct aw87xxx *aw87xxx =
 		container_of(monitor, struct aw87xxx, monitor);
@@ -646,13 +646,13 @@ void aw_monitor_stop(struct aw_monitor *monitor)
 	cancel_delayed_work_sync(&monitor->with_dsp_work);
 }
 
-void aw_monitor_start(struct aw_monitor *monitor)
+void aw87xxx_monitor_start(struct aw_monitor *monitor)
 {
 	struct aw87xxx *aw87xxx =
 		container_of(monitor, struct aw87xxx, monitor);
 	int ret = 0;
 
-	ret = aw_dev_check_reg_is_rec_mode(&aw87xxx->aw_dev);
+	ret = aw87xxx_dev_check_reg_is_rec_mode(&aw87xxx->aw_dev);
 	if (ret < 0) {
 		AW_DEV_LOGE(aw87xxx->dev, "get reg current mode failed");
 		return;
@@ -677,7 +677,7 @@ void aw_monitor_start(struct aw_monitor *monitor)
  * aw87xxx no dsp monitor func
  *
  ***************************************************************************/
-int aw_monitor_no_dsp_get_vmax(struct aw_monitor *monitor, int32_t *vmax)
+int aw87xxx_monitor_cfg_free(struct aw_monitor *monitor, int32_t *vmax)
 {
 	int vbat_capacity = 0;
 	int ret = -1;
@@ -816,7 +816,7 @@ static ssize_t aw_attr_get_vmax(struct device *dev,
 	struct aw_monitor *monitor = &aw87xxx->monitor;
 
 	if (monitor->open_dsp_en) {
-		ret = aw_dsp_get_vmax(&vmax_get, aw87xxx->dev_index);
+		ret = aw87xxx_dsp_get_vmax(&vmax_get, aw87xxx->dev_index);
 		if (ret < 0) {
 			AW_DEV_LOGE(aw87xxx->dev,
 				"get dsp vmax fail, ret=%d", ret);
@@ -869,7 +869,7 @@ static ssize_t aw_attr_set_vmax(struct device *dev,
 	AW_DEV_LOGI(aw87xxx->dev, "vmax_set=0x%x", vmax_set);
 
 	if (monitor->open_dsp_en) {
-		ret = aw_dsp_set_vmax(vmax_set, aw87xxx->dev_index);
+		ret = aw87xxx_dsp_set_vmax(vmax_set, aw87xxx->dev_index);
 		if (ret < 0) {
 			AW_DEV_LOGE(aw87xxx->dev, "send dsp_msg error, ret = %d",
 				ret);
@@ -1028,7 +1028,7 @@ static ssize_t aw_attr_get_rx(struct device *dev,
 	uint32_t enable = 0;
 
 	if (monitor->open_dsp_en) {
-		ret = aw_dsp_get_rx_module_enable(&enable);
+		ret = aw87xxx_dsp_get_rx_module_enable(&enable);
 		if (ret) {
 			AW_DEV_LOGE(aw87xxx->dev, "dsp_msg error, ret=%d", ret);
 			return ret;
@@ -1058,7 +1058,7 @@ static ssize_t aw_attr_set_rx(struct device *dev,
 	if (monitor->open_dsp_en) {
 		AW_DEV_LOGI(aw87xxx->dev, "set rx enable=%d", enable);
 
-		ret = aw_dsp_set_rx_module_enable(enable);
+		ret = aw87xxx_dsp_set_rx_module_enable(enable);
 		if (ret < 0) {
 			AW_DEV_LOGE(aw87xxx->dev, "dsp_msg error, ret=%d",
 				ret);
@@ -1139,7 +1139,7 @@ static void aw_monitor_dtsi_parse(struct device *dev,
 	}
 }
 
-void aw_monitor_init(struct device *dev, struct aw_monitor *monitor,
+void aw87xxx_monitor_init(struct device *dev, struct aw_monitor *monitor,
 				struct device_node *dev_node)
 {
 	int ret = -1;
@@ -1152,7 +1152,7 @@ void aw_monitor_init(struct device *dev, struct aw_monitor *monitor,
 	aw_monitor_dtsi_parse(dev, monitor, dev_node);
 
 	/* get platform open dsp type */
-	monitor->open_dsp_en = aw_dsp_isEnable();
+	monitor->open_dsp_en = aw87xxx_dsp_isEnable();
 
 	ret = sysfs_create_group(&dev->kobj, &aw_monitor_vol_adjust_group);
 	if (ret < 0)
@@ -1170,7 +1170,7 @@ void aw_monitor_init(struct device *dev, struct aw_monitor *monitor,
 		AW_DEV_LOGI(dev, "monitor init succeed");
 }
 
-void aw_monitor_exit(struct aw_monitor *monitor)
+void aw87xxx_monitor_exit(struct aw_monitor *monitor)
 {
 	struct aw87xxx *aw87xxx =
 		container_of(monitor, struct aw87xxx, monitor);
@@ -1178,7 +1178,7 @@ void aw_monitor_exit(struct aw_monitor *monitor)
 	sysfs_remove_group(&aw87xxx->dev->kobj,
 			&aw_monitor_vol_adjust_group);
 
-	aw_monitor_stop(monitor);
+	aw87xxx_monitor_stop(monitor);
 
 	if (monitor->open_dsp_en) {
 		sysfs_remove_group(&aw87xxx->dev->kobj,

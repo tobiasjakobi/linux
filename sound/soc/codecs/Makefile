@@ -55,11 +55,11 @@ snd-soc-aw88395-y := aw88395/aw88395.o \
 snd-soc-aw88261-y := aw88261.o
 snd-soc-aw88399-y := aw88399.o
 snd-soc-aw87xxx-y := aw87xxx/aw87xxx.o \
-			aw87xxx/aw_acf_bin.o \
-			aw87xxx/aw_bin_parse.o \
-			aw87xxx/aw_device.o \
-			aw87xxx/aw_dsp.o \
-			aw87xxx/aw_monitor.o
+			aw87xxx/aw87xxx_acf_bin.o \
+			aw87xxx/aw87xxx_bin_parse.o \
+			aw87xxx/aw87xxx_device.o \
+			aw87xxx/aw87xxx_dsp.o \
+			aw87xxx/aw87xxx_monitor.o
 snd-soc-bd28623-y := bd28623.o
 snd-soc-bt-sco-y := bt-sco.o
 snd-soc-chv3-codec-y := chv3-codec.o

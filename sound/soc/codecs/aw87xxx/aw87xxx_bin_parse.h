@@ -1,7 +1,7 @@
 /* SPDX-License-Identifier: GPL-2.0+ */
 
-#ifndef __AW_BIN_PARSE_H__
-#define __AW_BIN_PARSE_H__
+#ifndef __AW87XXX_BIN_PARSE_H__
+#define __AW87XXX_BIN_PARSE_H__
 
 #define NULL    ((void *)0)
 #define GET_32_DATA(w, x, y, z) ((unsigned int)(((w) << 24) | ((x) << 16) | ((y) << 8) | (z)))
@@ -71,6 +71,6 @@ struct aw_bin {
 	struct bin_container info; /* Obtained bin file data that needs to be parsed */
 };
 
-extern int aw_parsing_bin_file(struct aw_bin *bin);
+extern int aw87xxx_parsing_bin_file(struct aw_bin *bin);
 int aw_parse_bin_header_1_0_0(struct aw_bin *bin);
 #endif

@@ -1,5 +1,5 @@
 /*
-* aw_bin_parse.c
+* aw87xxx_bin_parse.c
 *
 * Copyright (c) 2020 AWINIC Technology CO., LTD
 *
@@ -31,7 +31,7 @@
 #include <linux/cdev.h>
 #include <linux/list.h>
 #include <linux/string.h>
-#include "aw_bin_parse.h"
+#include "aw87xxx_bin_parse.h"
 
 #define AWINIC_CODE_VERSION "V0.0.7-V1.0.4"	/* "code version"-"excel version" */
 
@@ -434,7 +434,7 @@ static int aw_check_bin_header_version(struct aw_bin *bin)
 	}
 }
 
-int aw_parsing_bin_file(struct aw_bin *bin)
+int aw87xxx_parsing_bin_file(struct aw_bin *bin)
 {
 	int i = 0;
 	int ret = 0;

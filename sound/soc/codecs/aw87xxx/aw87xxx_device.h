@@ -1,12 +1,12 @@
 /* SPDX-License-Identifier: GPL-2.0+ */
 
-#ifndef __AW_DEVICE_H__
-#define __AW_DEVICE_H__
+#ifndef __AW87XXX_DEVICE_H__
+#define __AW87XXX_DEVICE_H__
 #include <linux/version.h>
 #include <linux/kernel.h>
 #include <sound/control.h>
 #include <sound/soc.h>
-#include "aw_acf_bin.h"
+#include "aw87xxx_acf_bin.h"
 
 #define AW87XXX_PID_9B_PRODUCT_MAX	(1)
 #define AW87XXX_PID_39_PRODUCT_MAX	(3)
@@ -128,24 +128,24 @@ struct aw_device {
 };
 
 
-int aw_dev_i2c_write_byte(struct aw_device *aw_dev,
+int aw87xxx_dev_i2c_write_byte(struct aw_device *aw_dev,
 			uint8_t reg_addr, uint8_t reg_data);
-int aw_dev_i2c_read_byte(struct aw_device *aw_dev,
+int aw87xxx_dev_i2c_read_byte(struct aw_device *aw_dev,
 			uint8_t reg_addr, uint8_t *reg_data);
-int aw_dev_i2c_read_msg(struct aw_device *aw_dev,
+int aw87xxx_dev_i2c_read_msg(struct aw_device *aw_dev,
 	uint8_t reg_addr, uint8_t *data_buf, uint32_t data_len);
-int aw_dev_i2c_write_bits(struct aw_device *aw_dev,
+int aw87xxx_dev_i2c_write_bits(struct aw_device *aw_dev,
 	uint8_t reg_addr, uint8_t mask, uint8_t reg_data);
-void aw_dev_soft_reset(struct aw_device *aw_dev);
-void aw_dev_hw_pwr_ctrl(struct aw_device *aw_dev, bool enable);
-int aw_dev_default_profile_check(struct aw_device *aw_dev,
+void aw87xxx_dev_soft_reset(struct aw_device *aw_dev);
+void aw87xxx_dev_hw_pwr_ctrl(struct aw_device *aw_dev, bool enable);
+int aw87xxx_dev_default_profile_check(struct aw_device *aw_dev,
 		int profile, struct aw_data_container *profile_data);
-int aw_dev_default_pwr_on(struct aw_device *aw_dev,
+int aw87xxx_dev_default_pwr_on(struct aw_device *aw_dev,
 			struct aw_data_container *profile_data);
-int aw_dev_default_pwr_off(struct aw_device *aw_dev,
+int aw87xxx_dev_default_pwr_off(struct aw_device *aw_dev,
 			struct aw_data_container *profile_data);
-int aw_dev_esd_reg_status_check(struct aw_device *aw_dev);
-int aw_dev_check_reg_is_rec_mode(struct aw_device *aw_dev);
-int aw_dev_init(struct aw_device *aw_dev);
+int aw87xxx_dev_esd_reg_status_check(struct aw_device *aw_dev);
+int aw87xxx_dev_check_reg_is_rec_mode(struct aw_device *aw_dev);
+int aw87xxx_dev_init(struct aw_device *aw_dev);
 
 #endif

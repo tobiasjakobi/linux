@@ -1,9 +1,9 @@
 /* SPDX-License-Identifier: GPL-2.0+ */
 
-#ifndef __AW_ACF_BIN_H__
-#define __AW_ACF_BIN_H__
+#ifndef __AW87XXX_ACF_BIN_H__
+#define __AW87XXX_ACF_BIN_H__
 
-#include "aw_device.h"
+#include "aw87xxx_device.h"
 
 #define AW_PROJECT_NAME_MAX		(24)
 #define AW_CUSTOMER_NAME_MAX		(16)
@@ -174,22 +174,22 @@ struct acf_bin_info {
 };
 
 
-void aw_acf_profile_free(struct device *dev,
+void aw87xxx_acf_profile_free(struct device *dev,
 		struct acf_bin_info *acf_info);
-int aw_acf_parse(struct device *dev, struct acf_bin_info *acf_info);
-struct aw_prof_desc *aw_acf_get_prof_desc_form_name(struct device *dev,
+int aw87xxx_acf_parse(struct device *dev, struct acf_bin_info *acf_info);
+struct aw_prof_desc *aw87xxx_acf_get_prof_desc_form_name(struct device *dev,
 			struct acf_bin_info *acf_info, char *profile_name);
-int aw_acf_get_prof_index_form_name(struct device *dev,
+int aw87xxx_acf_get_prof_index_form_name(struct device *dev,
 			struct acf_bin_info *acf_info, char *profile_name);
-char *aw_acf_get_prof_name_form_index(struct device *dev,
+char *aw87xxx_acf_get_prof_name_form_index(struct device *dev,
 			struct acf_bin_info *acf_info, int index);
-int aw_acf_get_profile_count(struct device *dev,
+int aw87xxx_acf_get_profile_count(struct device *dev,
 			struct acf_bin_info *acf_info);
-int aw_acf_check_profile_is_off(struct device *dev,
+int aw87xxx_acf_check_profile_is_off(struct device *dev,
 			struct acf_bin_info *acf_info, char *profile_name);
-char *aw_acf_get_prof_off_name(struct device *dev,
+char *aw87xxx_acf_get_prof_off_name(struct device *dev,
 			struct acf_bin_info *acf_info);
-void aw_acf_init(struct aw_device *aw_dev, struct acf_bin_info *acf_info, int index);
+void aw87xxx_acf_init(struct aw_device *aw_dev, struct acf_bin_info *acf_info, int index);
 
 
 #endif
