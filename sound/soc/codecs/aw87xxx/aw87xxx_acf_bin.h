@@ -1,5 +1,3 @@
-/* SPDX-License-Identifier: GPL-2.0+ */
-
 #ifndef __AW87XXX_ACF_BIN_H__
 #define __AW87XXX_ACF_BIN_H__
 
@@ -173,7 +171,7 @@ struct acf_bin_info {
 	struct aw_prof_info prof_info;
 };
 
-
+char *aw87xxx_ctos_get_prof_name(int profile_id);
 void aw87xxx_acf_profile_free(struct device *dev,
 		struct acf_bin_info *acf_info);
 int aw87xxx_acf_parse(struct device *dev, struct acf_bin_info *acf_info);
@@ -185,8 +183,6 @@ char *aw87xxx_acf_get_prof_name_form_index(struct device *dev,
 			struct acf_bin_info *acf_info, int index);
 int aw87xxx_acf_get_profile_count(struct device *dev,
 			struct acf_bin_info *acf_info);
-int aw87xxx_acf_check_profile_is_off(struct device *dev,
-			struct acf_bin_info *acf_info, char *profile_name);
 char *aw87xxx_acf_get_prof_off_name(struct device *dev,
 			struct acf_bin_info *acf_info);
 void aw87xxx_acf_init(struct aw_device *aw_dev, struct acf_bin_info *acf_info, int index);

@@ -26,6 +26,52 @@
 #include "aw87xxx_log.h"
 #include "aw87xxx_bin_parse.h"
 
+/*************************************************************************
+ *
+ *Table corresponding to customized profile ids to profile names
+ *
+ *************************************************************************/
+enum aw_customers_profile_id {
+	AW_CTOS_PROFILE_OFF = 0,
+	AW_CTOS_PROFILE_MUSIC,
+	AW_CTOS_PROFILE_VOICE,
+	AW_CTOS_PROFILE_VOIP,
+	AW_CTOS_PROFILE_RINGTONE,
+	AW_CTOS_PROFILE_RINGTONE_HS,
+	AW_CTOS_PROFILE_LOWPOWER,
+	AW_CTOS_PROFILE_BYPASS,
+	AW_CTOS_PROFILE_MMI,
+	AW_CTOS_PROFILE_FM,
+	AW_CTOS_PROFILE_NOTIFICATION,
+	AW_CTOS_PROFILE_RECEIVER,
+	AW_CTOS_PROFILE_MAX,
+};
+
+static char *g_ctos_profile_name[AW_PROFILE_MAX] = {
+	[AW_CTOS_PROFILE_OFF] = "Off",
+	[AW_CTOS_PROFILE_MUSIC] = "Music",
+	[AW_CTOS_PROFILE_VOICE] = "Voice",
+	[AW_CTOS_PROFILE_VOIP] = "Voip",
+	[AW_CTOS_PROFILE_RINGTONE] = "Ringtone",
+	[AW_CTOS_PROFILE_RINGTONE_HS] = "Ringtone_hs",
+	[AW_CTOS_PROFILE_LOWPOWER] = "Lowpower",
+	[AW_CTOS_PROFILE_BYPASS] = "Bypass",
+	[AW_CTOS_PROFILE_MMI] = "Mmi",
+	[AW_CTOS_PROFILE_FM] = "Fm",
+	[AW_CTOS_PROFILE_NOTIFICATION] = "Notification",
+	[AW_CTOS_PROFILE_RECEIVER] = "Receiver",
+};
+
+
+char *aw87xxx_ctos_get_prof_name(int profile_id)
+{
+	if (profile_id < 0 || profile_id >= AW_CTOS_PROFILE_MAX)
+		return NULL;
+	else
+		return g_ctos_profile_name[profile_id];
+}
+
+
 static char *g_profile_name[] = {"Music", "Voice", "Voip",
 		"Ringtone", "Ringtone_hs", "Lowpower", "Bypass", "Mmi",
 		"Fm", "Notification", "Receiver", "Off"};
@@ -533,11 +579,6 @@ static int aw_parse_data_by_sec_type_v_0_0_0_1(struct device *dev,
 					prof_hdr->data_size,
 					profile_prof_desc);
 		break;
-	case AW_MONITOR:
-		AW_DEV_LOGD(dev, "parse monitor type data enter");
-		ret = aw_parse_monitor_config(dev, cfg_data,
-					prof_hdr->data_size);
-		break;
 	}
 
 	return ret;
@@ -549,7 +590,7 @@ static int aw_parse_dev_type_v_0_0_0_1(struct device *dev,
 	int i = 0;
 	int ret = -1;
 	int sec_num = 0;
-	uint8_t soft_off_enable = acf_info->aw_dev->soft_off_enable;
+	char *cfg_data = NULL;
 	struct aw_prof_desc *prof_desc = NULL;
 	struct aw_acf_dde *acf_dde =
 		(struct aw_acf_dde *)(acf_info->fw_data + acf_info->acf_hdr.ddt_offset);
@@ -567,16 +608,14 @@ static int aw_parse_dev_type_v_0_0_0_1(struct device *dev,
 
 			ret = aw_check_data_type_is_monitor_v_0_0_0_1(dev, &acf_dde[i]);
 			if (ret == 0) {
-				prof_desc = NULL;
-			} else {
-				prof_desc = &all_prof_info->prof_desc[acf_dde[i].dev_profile];
+				cfg_data = acf_info->fw_data + acf_dde[i].data_offset;
+				ret = aw_parse_monitor_config(dev, cfg_data, acf_dde[i].data_size);
+				if (ret < 0)
+					return ret;
+				continue;
 			}
 
-			if (acf_dde[i].dev_profile == AW_PROFILE_OFF && !soft_off_enable) {
-				AW_DEV_LOGE(dev, "profile off is not allowed");
-				return -EINVAL;
-			}
-
+			prof_desc = &all_prof_info->prof_desc[acf_dde[i].dev_profile];
 			ret = aw_parse_data_by_sec_type_v_0_0_0_1(dev, acf_info, &acf_dde[i],
 				prof_desc);
 			if (ret < 0) {
@@ -602,7 +641,7 @@ static int aw_parse_default_type_v_0_0_0_1(struct device *dev,
 	int i = 0;
 	int ret = -1;
 	int sec_num = 0;
-	uint8_t soft_off_enable = acf_info->aw_dev->soft_off_enable;
+	char *cfg_data = NULL;
 	struct aw_prof_desc *prof_desc = NULL;
 	struct aw_acf_dde *acf_dde =
 		(struct aw_acf_dde *)(acf_info->fw_data + acf_info->acf_hdr.ddt_offset);
@@ -619,16 +658,14 @@ static int aw_parse_default_type_v_0_0_0_1(struct device *dev,
 
 			ret = aw_check_data_type_is_monitor_v_0_0_0_1(dev, &acf_dde[i]);
 			if (ret == 0) {
-				prof_desc = NULL;
-			} else {
-				prof_desc = &all_prof_info->prof_desc[acf_dde[i].dev_profile];
+				cfg_data = acf_info->fw_data + acf_dde[i].data_offset;
+				ret = aw_parse_monitor_config(dev, cfg_data, acf_dde[i].data_size);
+				if (ret < 0)
+					return ret;
+				continue;
 			}
 
-			if (acf_dde[i].dev_profile == AW_PROFILE_OFF && !soft_off_enable) {
-				AW_DEV_LOGE(dev, "profile off is not allowed");
-				return -EINVAL;
-			}
-
+			prof_desc = &all_prof_info->prof_desc[acf_dde[i].dev_profile];
 			ret = aw_parse_data_by_sec_type_v_0_0_0_1(dev, acf_info, &acf_dde[i],
 				prof_desc);
 			if (ret < 0) {
@@ -654,23 +691,14 @@ static int aw_get_prof_count_v_0_0_0_1(struct device *dev,
 {
 	int i = 0;
 	int prof_count = 0;
-	uint8_t soft_off_enable = acf_info->aw_dev->soft_off_enable;
 	struct aw_prof_desc *prof_desc = all_prof_info->prof_desc;
 
 	for (i = 0; i < AW_PROFILE_MAX; i++) {
-		if (i == AW_PROFILE_OFF) {
-			if (!soft_off_enable && prof_desc[i].prof_st == AW_PROFILE_OK) {
-				AW_DEV_LOGE(dev, "profile_off is not allowed");
-				return -EINVAL;
-			} else if (soft_off_enable && prof_desc[i].prof_st == AW_PROFILE_WAIT) {
-				AW_DEV_LOGE(dev, "profile [Off] is necessary,but not found");
-				return -EINVAL;
-			} else {
-				prof_count++;
-			}
-		} else {
-			if (prof_desc[i].prof_st == AW_PROFILE_OK)
-				prof_count++;
+		if (prof_desc[i].prof_st == AW_PROFILE_OK) {
+			prof_count++;
+		} else if (i == AW_PROFILE_OFF) {
+			prof_count++;
+			AW_DEV_LOGI(dev, "not found profile [Off], set default");
 		}
 	}
 
@@ -683,7 +711,6 @@ static int aw_set_prof_off_info_v_0_0_0_1(struct device *dev,
 				struct aw_all_prof_info *all_prof_info,
 				int index)
 {
-	uint8_t soft_off_enable = acf_info->aw_dev->soft_off_enable;
 	struct aw_prof_desc *prof_desc = all_prof_info->prof_desc;
 	struct aw_prof_info *prof_info = &acf_info->prof_info;
 
@@ -693,20 +720,17 @@ static int aw_set_prof_off_info_v_0_0_0_1(struct device *dev,
 		return -EINVAL;
 	}
 
-	if (soft_off_enable && prof_desc[AW_PROFILE_OFF].prof_st == AW_PROFILE_OK) {
+	if (prof_desc[AW_PROFILE_OFF].prof_st == AW_PROFILE_OK) {
 		prof_info->prof_desc[index] = prof_desc[AW_PROFILE_OFF];
 		AW_DEV_LOGI(dev, "product=[%s]----profile=[%s]",
 			prof_info->prof_desc[index].dev_name,
 			aw_get_prof_name(AW_PROFILE_OFF));
-	} else if (!soft_off_enable) {
+	} else {
 		memset(&prof_info->prof_desc[index].data_container, 0,
 			sizeof(struct aw_data_container));
 		prof_info->prof_desc[index].prof_st = AW_PROFILE_WAIT;
 		prof_info->prof_desc[index].prof_name = aw_get_prof_name(AW_PROFILE_OFF);
 		AW_DEV_LOGI(dev, "set default power_off with no data to profile");
-	} else {
-		AW_DEV_LOGE(dev, "not init default power_off config");
-		return -EINVAL;
 	}
 
 	return 0;
@@ -844,14 +868,6 @@ static int aw_check_product_name_v_1_0_0_0(struct device *dev,
 	return -ENXIO;
 }
 
-static void aw_print_prof_off_name_can_support_v_1_0_0_0(struct device *dev)
-{
-	int i = 0;
-
-	for (i = 0; i < AW_POWER_OFF_NAME_SUPPORT_COUNT; i++)
-		AW_DEV_LOGI(dev, "support prof_off_name have string:[%s]", g_power_off_name[i]);
-}
-
 static int aw_get_dde_type_info_v_1_0_0_0(struct device *dev,
 					struct acf_bin_info *acf_info)
 {
@@ -888,7 +904,6 @@ static int aw_get_dde_type_info_v_1_0_0_0(struct device *dev,
 static int aw_parse_get_dev_type_prof_count_v_1_0_0_0(struct device *dev,
 						struct acf_bin_info *acf_info)
 {
-	uint8_t soft_off_enable = acf_info->aw_dev->soft_off_enable;
 	struct aw_acf_hdr *acf_hdr = (struct aw_acf_hdr *)acf_info->fw_data;
 	struct aw_acf_dde_v_1_0_0_0 *acf_dde =
 		(struct aw_acf_dde_v_1_0_0_0 *)(acf_info->fw_data + acf_hdr->ddt_offset);
@@ -911,15 +926,8 @@ static int aw_parse_get_dev_type_prof_count_v_1_0_0_0(struct device *dev,
 			ret = aw_check_prof_str_is_off(acf_dde[i].dev_profile_str);
 			if (ret == 0) {
 				found_off_prof_flag = AW_PROFILE_OK;
-				if (soft_off_enable) {
-					count++;
-				} else {
-					AW_DEV_LOGE(dev, "profile_off is not allowed");
-					return -EINVAL;
-				}
-			} else {
-				count++;
 			}
+			count++;
 		}
 	}
 
@@ -928,13 +936,7 @@ static int aw_parse_get_dev_type_prof_count_v_1_0_0_0(struct device *dev,
 		return -EINVAL;
 	}
 
-	if (!found_off_prof_flag && soft_off_enable) {
-		AW_DEV_LOGE(dev, "profile power off is necessary,but not found");
-		aw_print_prof_off_name_can_support_v_1_0_0_0(dev);
-		return -EINVAL;
-	}
-
-	if (!found_off_prof_flag && !soft_off_enable) {
+	if (!found_off_prof_flag) {
 		count++;
 		AW_DEV_LOGD(dev, "set no config power off profile in count");
 	}
@@ -947,7 +949,6 @@ static int aw_parse_get_dev_type_prof_count_v_1_0_0_0(struct device *dev,
 static int aw_parse_get_default_type_prof_count_v_1_0_0_0(struct device *dev,
 						struct acf_bin_info *acf_info)
 {
-	uint8_t soft_off_enable = acf_info->aw_dev->soft_off_enable;
 	struct aw_acf_hdr *acf_hdr = (struct aw_acf_hdr *)acf_info->fw_data;
 	struct aw_acf_dde_v_1_0_0_0 *acf_dde =
 		(struct aw_acf_dde_v_1_0_0_0 *)(acf_info->fw_data + acf_hdr->ddt_offset);
@@ -969,15 +970,8 @@ static int aw_parse_get_default_type_prof_count_v_1_0_0_0(struct device *dev,
 			ret = aw_check_prof_str_is_off(acf_dde[i].dev_profile_str);
 			if (ret == 0) {
 				found_off_prof_flag = AW_PROFILE_OK;
-				if (soft_off_enable) {
-					count++;
-				} else {
-					AW_DEV_LOGE(dev, "profile_off is not allowed");
-					return -EINVAL;
-				}
-			} else {
-				count++;
 			}
+			count++;
 		}
 	}
 
@@ -986,13 +980,7 @@ static int aw_parse_get_default_type_prof_count_v_1_0_0_0(struct device *dev,
 		return -EINVAL;
 	}
 
-	if (!found_off_prof_flag && soft_off_enable) {
-		AW_DEV_LOGE(dev, "profile power off is necessary,but not found");
-		aw_print_prof_off_name_can_support_v_1_0_0_0(dev);
-		return -EINVAL;
-	}
-
-	if (!found_off_prof_flag && !soft_off_enable) {
+	if (!found_off_prof_flag) {
 		count++;
 		AW_DEV_LOGD(dev, "set no config power off profile in count");
 	}
@@ -1313,13 +1301,12 @@ static int aw_parse_by_hdr_v_1_0_0_0(struct device *dev,
 static int aw_set_prof_off_info_v_1_0_0_0(struct device *dev,
 						struct acf_bin_info *acf_info)
 {
-	uint8_t soft_off_enable = acf_info->aw_dev->soft_off_enable;
 	struct aw_prof_info *prof_info = &acf_info->prof_info;
 	int i = 0;
 	int ret = 0;
 
 	for (i = 0; i < prof_info->count; ++i) {
-		if (!(prof_info->prof_desc[i].prof_st) && !soft_off_enable) {
+		if (!(prof_info->prof_desc[i].prof_st)) {
 			snprintf(prof_info->prof_name_list[i], AW_PROFILE_STR_MAX, "%s",
 					g_power_off_name[0]);
 			prof_info->prof_desc[i].prof_name = prof_info->prof_name_list[i];

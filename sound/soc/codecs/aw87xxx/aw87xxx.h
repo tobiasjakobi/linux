@@ -1,5 +1,3 @@
-/* SPDX-License-Identifier: GPL-2.0+ */
-
 #ifndef __AW87XXX_H__
 #define __AW87XXX_H__
 #include <linux/version.h>
@@ -17,7 +15,8 @@
 #define AW87XXX_NO_OFF_BIN		(0)
 #define AW87XXX_OFF_BIN_OK		(1)
 
-#define AW87XXX_KCONTROL_NUM		(2)
+#define AW87XXX_PRIVATE_KCONTROL_NUM	(3)
+#define AW87XXX_PUBLIC_KCONTROL_NUM	(1)
 
 #define AW_I2C_RETRIES			(5)
 #define AW_I2C_RETRY_DELAY		(2)
@@ -117,6 +116,6 @@ struct aw87xxx {
 };
 
 int aw87xxx_update_profile(struct aw87xxx *aw87xxx, char *profile);
-int aw87xxx_esd_update_profile(struct aw87xxx *aw87xxx, char *profile);
+int aw87xxx_update_profile_esd(struct aw87xxx *aw87xxx, char *profile);
 
 #endif

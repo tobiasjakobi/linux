@@ -33,12 +33,16 @@
 #include "aw87xxx_pid_59_5x9_reg.h"
 #include "aw87xxx_pid_5a_reg.h"
 #include "aw87xxx_pid_76_reg.h"
+#include "aw87xxx_pid_60_reg.h"
 
 /*************************************************************************
  * aw87xxx variable
  ************************************************************************/
 const char *g_aw_pid_9b_product[] = {
 	"aw87319",
+};
+const char *g_aw_pid_18_product[] = {
+	"aw87418",
 };
 
 const char *g_aw_pid_39_product[] = {
@@ -71,6 +75,15 @@ const char *g_aw_pid_76_product[] = {
 	"aw87390",
 	"aw87320",
 	"aw87401",
+	"aw87360",
+};
+
+const char *g_aw_pid_60_product[] = {
+	"aw87560",
+	"aw87561",
+	"aw87562",
+	"aw87501",
+	"aw87550",
 };
 
 static int aw87xxx_dev_get_chipid(struct aw_device *aw_dev);
@@ -167,7 +180,7 @@ int aw87xxx_dev_i2c_write_bits(struct aw_device *aw_dev,
 		return ret;
 	}
 	reg_val &= mask;
-	reg_val |= reg_data;
+	reg_val |= (reg_data & (~mask));
 	ret = aw87xxx_dev_i2c_write_byte(aw_dev, reg_addr, reg_val);
 	if (ret < 0) {
 		AW_DEV_LOGE(aw_dev->dev, "i2c write error, ret=%d", ret);
@@ -221,6 +234,45 @@ static void aw87xxx_dev_reg_mute_bits_set(struct aw_device *aw_dev,
 	}
 }
 
+static int aw87xxx_dev_reg_update_mute(struct aw_device *aw_dev,
+			struct aw_data_container *profile_data)
+{
+	int i = 0;
+	int ret = -1;
+	uint8_t reg_val = 0;
+
+	if (profile_data == NULL)
+		return -EINVAL;
+
+	if (aw_dev->hwen_status == AW_DEV_HWEN_OFF) {
+		AW_DEV_LOGE(aw_dev->dev, "hwen is off,can not update reg");
+		return -EINVAL;
+	}
+
+	if (aw_dev->mute_desc.mask == AW_DEV_REG_INVALID_MASK) {
+		AW_DEV_LOGE(aw_dev->dev, "mute ctrl mask invalid");
+		return -EINVAL;
+	}
+
+	for (i = 0; i < profile_data->len; i = i + 2) {
+		AW_DEV_LOGI(aw_dev->dev, "reg=0x%02x, val = 0x%02x",
+			profile_data->data[i], profile_data->data[i + 1]);
+
+		reg_val = profile_data->data[i + 1];
+		if (profile_data->data[i] == aw_dev->mute_desc.addr) {
+			aw87xxx_dev_reg_mute_bits_set(aw_dev, &reg_val, true);
+			AW_DEV_LOGD(aw_dev->dev, "change mute_mask, val = 0x%02x",
+				reg_val);
+		}
+
+		ret = aw87xxx_dev_i2c_write_byte(aw_dev, profile_data->data[i], reg_val);
+		if (ret < 0)
+			return ret;
+	}
+
+	return 0;
+}
+
 /************************************************************************
  *
  * aw87xxx device hadware and soft contols
@@ -263,7 +315,7 @@ void aw87xxx_dev_hw_pwr_ctrl(struct aw_device *aw_dev, bool enable)
 	}
 }
 
-int aw87xxx_dev_mute_ctrl(struct aw_device *aw_dev, bool enable)
+static int aw87xxx_dev_mute_ctrl(struct aw_device *aw_dev, bool enable)
 {
 	int ret = 0;
 
@@ -313,7 +365,7 @@ void aw87xxx_dev_soft_reset(struct aw_device *aw_dev)
 		return;
 	}
 
-	for (i = 0; i < soft_rst->len / sizeof(uint8_t); i += 2) {
+	for (i = 0; i < soft_rst->len; i += 2) {
 		AW_DEV_LOGD(aw_dev->dev, "softrst_reg=0x%02x, val = 0x%02x",
 			soft_rst->access[i], soft_rst->access[i + 1]);
 
@@ -503,7 +555,7 @@ static int aw_dev_pid_9b_reg_update(struct aw_device *aw_dev,
 	return 0;
 }
 
-int aw_dev_pid_9b_pwr_on(struct aw_device *aw_dev, struct aw_data_container *data)
+static int aw_dev_pid_9b_pwr_on(struct aw_device *aw_dev, struct aw_data_container *data)
 {
 	int ret = 0;
 
@@ -521,7 +573,7 @@ int aw_dev_pid_9b_pwr_on(struct aw_device *aw_dev, struct aw_data_container *dat
 		return ret;
 
 	/* close the mute */
-	aw87xxx_dev_mute_ctrl(aw_dev, false);
+	ret = aw87xxx_dev_mute_ctrl(aw_dev, false);
 	if (ret < 0)
 		return ret;
 
@@ -582,7 +634,7 @@ static int aw_dev_pid_9a_init(struct aw_device *aw_dev)
 		AW_DEV_LOGI(aw_dev->dev, "product is pid_9B class");
 		aw_dev_pid_9b_init(aw_dev);
 	} else {
-		AW_DEV_LOGE(aw_dev->dev, "product is not pid_9B class, not support");
+		AW_DEV_LOGE(aw_dev->dev, "product is not pid_9B class，not support");
 		return -EINVAL;
 	}
 
@@ -590,6 +642,66 @@ static int aw_dev_pid_9a_init(struct aw_device *aw_dev)
 }
 
 /********************** aw87xxx_pid_9b attributes end ***********************/
+
+/********************** aw87xxx_pid_18 attributes ***************************/
+static int aw_dev_pid_18_pwr_on(struct aw_device *aw_dev, struct aw_data_container *data)
+{
+	int ret = 0;
+
+	/*hw power on*/
+	aw87xxx_dev_hw_pwr_ctrl(aw_dev, true);
+
+	/* open the mute */
+	ret = aw87xxx_dev_mute_ctrl(aw_dev, true);
+	if (ret < 0)
+		return ret;
+
+	/* Update scene parameters in mute mode */
+	ret = aw87xxx_dev_reg_update_mute(aw_dev, data);
+	if (ret < 0)
+		return ret;
+
+	/* close the mute */
+	ret = aw87xxx_dev_mute_ctrl(aw_dev, false);
+	if (ret < 0)
+		return ret;
+
+	return 0;
+}
+
+static void aw_dev_chipid_18_init(struct aw_device *aw_dev)
+{
+	/* Product register permission info */
+	aw_dev->reg_max_addr = AW87XXX_PID_18_REG_MAX;
+	aw_dev->reg_access = aw87xxx_pid_18_reg_access;
+
+	aw_dev->mute_desc.addr = AW87XXX_PID_18_SYSCTRL_REG;
+	aw_dev->mute_desc.mask = AW87XXX_PID_18_REG_EN_SW_MASK;
+	aw_dev->mute_desc.enable = AW87XXX_PID_18_REG_EN_SW_DISABLE_VALUE;
+	aw_dev->mute_desc.disable = AW87XXX_PID_18_REG_EN_SW_ENABLE_VALUE;
+	aw_dev->ops.pwr_on_func = aw_dev_pid_18_pwr_on;
+
+	/* software reset control info */
+	aw_dev->soft_rst_desc.len = sizeof(aw87xxx_pid_18_softrst_access);
+	aw_dev->soft_rst_desc.access = aw87xxx_pid_18_softrst_access;
+	aw_dev->soft_rst_enable = AW_DEV_SOFT_RST_ENABLE;
+
+	/* Whether to allow register operation to power off */
+	aw_dev->soft_off_enable = AW_DEV_SOFT_OFF_ENABLE;
+
+	aw_dev->product_tab = g_aw_pid_18_product;
+	aw_dev->product_cnt = AW87XXX_PID_18_PRODUCT_MAX;
+
+	aw_dev->rec_desc.addr = AW87XXX_PID_18_SYSCTRL_REG;
+	aw_dev->rec_desc.disable = AW87XXX_PID_18_REG_REC_MODE_DISABLE;
+	aw_dev->rec_desc.enable = AW87XXX_PID_18_REG_REC_MODE_ENABLE;
+	aw_dev->rec_desc.mask = AW87XXX_PID_18_REG_REC_MODE_MASK;
+
+	/* esd reg info */
+	aw_dev->esd_desc.first_update_reg_addr = AW87XXX_PID_18_CLASSD_REG;
+	aw_dev->esd_desc.first_update_reg_val = AW87XXX_PID_18_CLASSD_DEFAULT;
+}
+/********************** aw87xxx_pid_18 attributes end ***********************/
 
 /********************** aw87xxx_pid_39 attributes ***************************/
 static void aw_dev_chipid_39_init(struct aw_device *aw_dev)
@@ -706,7 +818,9 @@ static void aw_dev_chipid_5a_init(struct aw_device *aw_dev)
 	aw_dev->esd_desc.first_update_reg_addr = AW87XXX_PID_5A_REG_DFT3R_REG;
 	aw_dev->esd_desc.first_update_reg_val = AW87XXX_PID_5A_DFT3R_DEFAULT;
 }
+/********************** aw87xxx_pid_5a attributes end ************************/
 
+/********************** aw87xxx_pid_76 attributes ****************************/
 static void aw_dev_chipid_76_init(struct aw_device *aw_dev)
 {
 	/* Product register permission info */
@@ -733,10 +847,38 @@ static void aw_dev_chipid_76_init(struct aw_device *aw_dev)
 	aw_dev->esd_desc.first_update_reg_addr = AW87XXX_PID_76_DFT_ADP1_REG;
 	aw_dev->esd_desc.first_update_reg_val = AW87XXX_PID_76_DFT_ADP1_CHECK;
 }
+/********************** aw87xxx_pid_76 attributes end ************************/
 
-/********************** aw87xxx_pid_5a attributes end ************************/
+/********************** aw87xxx_pid_60 attributes ****************************/
+static void aw_dev_chipid_60_init(struct aw_device *aw_dev)
+{
+	/* Product register permission info */
+	aw_dev->reg_max_addr = AW87XXX_PID_60_REG_MAX;
+	aw_dev->reg_access = aw87xxx_pid_60_reg_access;
 
-static void aw_dev_chip_init(struct aw_device *aw_dev)
+	/* software reset control info */
+	aw_dev->soft_rst_desc.len = sizeof(aw87xxx_pid_60_softrst_access);
+	aw_dev->soft_rst_desc.access = aw87xxx_pid_60_softrst_access;
+	aw_dev->soft_rst_enable = AW_DEV_SOFT_RST_ENABLE;
+
+	/* software power off control info */
+	aw_dev->soft_off_enable = AW_DEV_SOFT_OFF_ENABLE;
+
+	aw_dev->product_tab = g_aw_pid_60_product;
+	aw_dev->product_cnt = AW87XXX_PID_60_PROFUCT_MAX;
+
+	aw_dev->rec_desc.addr = AW87XXX_PID_60_SYSCTRL_REG;
+	aw_dev->rec_desc.disable = AW87XXX_PID_60_RCV_MODE_DISABLE;
+	aw_dev->rec_desc.enable = AW87XXX_PID_60_RCV_MODE_ENABLE;
+	aw_dev->rec_desc.mask = AW87XXX_PID_60_RCV_MODE_MASK;
+
+	/* esd reg info */
+	aw_dev->esd_desc.first_update_reg_addr = AW87XXX_PID_60_NG3_REG;
+	aw_dev->esd_desc.first_update_reg_val = AW87XXX_PID_60_ESD_REG_VAL;
+}
+/********************** aw87xxx_pid_60 attributes end ************************/
+
+static int aw_dev_chip_init(struct aw_device *aw_dev)
 {
 	int ret  = 0;
 
@@ -750,6 +892,10 @@ static void aw_dev_chip_init(struct aw_device *aw_dev)
 	case AW_DEV_CHIPID_9B:
 		aw_dev_pid_9b_init(aw_dev);
 		AW_DEV_LOGI(aw_dev->dev, "product is pid_9B class");
+		break;
+	case AW_DEV_CHIPID_18:
+		aw_dev_chipid_18_init(aw_dev);
+		AW_DEV_LOGI(aw_dev->dev, "product is pid_18 class");
 		break;
 	case AW_DEV_CHIPID_39:
 		aw_dev_chipid_39_init(aw_dev);
@@ -772,11 +918,17 @@ static void aw_dev_chip_init(struct aw_device *aw_dev)
 		aw_dev_chipid_76_init(aw_dev);
 		AW_DEV_LOGI(aw_dev->dev, "product is pid_76 class");
 		break;
+	case AW_DEV_CHIPID_60:
+		aw_dev_chipid_60_init(aw_dev);
+		AW_DEV_LOGI(aw_dev->dev, "product is pid_60 class");
+		break;
 	default:
 		AW_DEV_LOGE(aw_dev->dev, "unsupported device revision [0x%x]",
 			aw_dev->chipid);
-		return;
+		return -EINVAL;
 	}
+
+	return 0;
 }
 
 static int aw87xxx_dev_get_chipid(struct aw_device *aw_dev)
@@ -817,9 +969,9 @@ int aw87xxx_dev_init(struct aw_device *aw_dev)
 		return ret;
 	}
 
-	aw_dev_chip_init(aw_dev);
+	ret = aw_dev_chip_init(aw_dev);
 
-	return 0;
+	return ret;
 }
 
 

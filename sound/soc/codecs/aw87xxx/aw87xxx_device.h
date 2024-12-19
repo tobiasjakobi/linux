@@ -1,5 +1,3 @@
-/* SPDX-License-Identifier: GPL-2.0+ */
-
 #ifndef __AW87XXX_DEVICE_H__
 #define __AW87XXX_DEVICE_H__
 #include <linux/version.h>
@@ -9,11 +7,13 @@
 #include "aw87xxx_acf_bin.h"
 
 #define AW87XXX_PID_9B_PRODUCT_MAX	(1)
+#define AW87XXX_PID_18_PRODUCT_MAX	(1)
 #define AW87XXX_PID_39_PRODUCT_MAX	(3)
 #define AW87XXX_PID_59_3X9_PRODUCT_MAX	(2)
 #define AW87XXX_PID_59_5X9_PRODUCT_MAX	(4)
 #define AW87XXX_PID_5A_PRODUCT_MAX	(5)
-#define AW87XXX_PID_76_PROFUCT_MAX	(3)
+#define AW87XXX_PID_76_PROFUCT_MAX	(4)
+#define AW87XXX_PID_60_PROFUCT_MAX	(5)
 #define AW_PRODUCT_NAME_LEN		(8)
 
 #define AW_GPIO_HIGHT_LEVEL		(1)
@@ -54,6 +54,7 @@ enum aw_dev_chipid {
 	AW_DEV_CHIPID_9A = 0x9A,
 	AW_DEV_CHIPID_9B = 0x9B,
 	AW_DEV_CHIPID_76 = 0x76,
+	AW_DEV_CHIPID_60 = 0x60,
 };
 
 enum aw_dev_hw_status {
@@ -111,7 +112,6 @@ struct aw_device {
 	int hwen_status;
 	int i2c_bus;
 	int rst_gpio;
-	int rst_shared_gpio;
 	int reg_max_addr;
 	int product_cnt;
 	const char **product_tab;
@@ -138,8 +138,6 @@ int aw87xxx_dev_i2c_write_bits(struct aw_device *aw_dev,
 	uint8_t reg_addr, uint8_t mask, uint8_t reg_data);
 void aw87xxx_dev_soft_reset(struct aw_device *aw_dev);
 void aw87xxx_dev_hw_pwr_ctrl(struct aw_device *aw_dev, bool enable);
-int aw87xxx_dev_default_profile_check(struct aw_device *aw_dev,
-		int profile, struct aw_data_container *profile_data);
 int aw87xxx_dev_default_pwr_on(struct aw_device *aw_dev,
 			struct aw_data_container *profile_data);
 int aw87xxx_dev_default_pwr_off(struct aw_device *aw_dev,

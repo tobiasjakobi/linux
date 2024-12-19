@@ -1,5 +1,3 @@
-/* SPDX-License-Identifier: GPL-2.0+ */
-
 #ifndef __AW87XXX_BIN_PARSE_H__
 #define __AW87XXX_BIN_PARSE_H__
 
@@ -63,7 +61,7 @@ struct bin_container {
 };
 
 struct aw_bin {
-	char *p_addr; /* Offset pointer (backward offset pointer to obtain frame header information and important information) */
+	unsigned char *p_addr; /* Offset pointer (backward offset pointer to obtain frame header information and important information) */
 	unsigned int all_bin_parse_num; /* The number of all bin files */
 	unsigned int multi_bin_parse_num; /* The number of single bin files */
 	unsigned int single_bin_parse_num; /* The number of multiple bin files */
@@ -72,5 +70,4 @@ struct aw_bin {
 };
 
 extern int aw87xxx_parsing_bin_file(struct aw_bin *bin);
-int aw_parse_bin_header_1_0_0(struct aw_bin *bin);
 #endif

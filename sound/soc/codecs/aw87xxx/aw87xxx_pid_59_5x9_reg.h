@@ -1,4 +1,3 @@
-/* SPDX-License-Identifier: GPL-2.0+ */
 /*
  * @Descripttion: Header file of AW87XXX_PID_59_5X9_REG
  * @version: V1.33

@@ -1,5 +1,3 @@
-/* SPDX-License-Identifier: GPL-2.0+ */
-
 #ifndef __AW87XXX_MONITOR_H__
 #define __AW87XXX_MONITOR_H__
 
@@ -16,8 +14,9 @@
 
 #define AW_ESD_ENABLE				(true)
 #define AW_ESD_DISABLE				(false)
+#define AW_ESD_ENABLE_STRLEN			(16)
 
-enum aw87xxx_monitor_init {
+enum aw_monitor_init {
 	AW_MONITOR_CFG_WAIT = 0,
 	AW_MONITOR_CFG_OK = 1,
 };
@@ -72,7 +71,7 @@ struct aw_monitor {
 	uint8_t first_entry;
 	uint8_t timer_cnt;
 	uint32_t vbat_sum;
-	uint32_t custom_capacity;
+	int32_t custom_capacity;
 	uint32_t pre_vmax;
 
 	int bin_status;
@@ -87,9 +86,11 @@ int aw87xxx_monitor_bin_parse(struct device *dev,
 			char *monitor_data, uint32_t data_len);
 void aw87xxx_monitor_stop(struct aw_monitor *monitor);
 void aw87xxx_monitor_start(struct aw_monitor *monitor);
-int aw87xxx_monitor_cfg_free(struct aw_monitor *monitor,
+int aw87xxx_monitor_no_dsp_get_vmax(struct aw_monitor *monitor,
 					int32_t *vmax);
 void aw87xxx_monitor_init(struct device *dev, struct aw_monitor *monitor,
 				struct device_node *dev_node);
 void aw87xxx_monitor_exit(struct aw_monitor *monitor);
+int aw87xxx_dev_monitor_switch_set(struct aw_monitor *monitor, uint32_t enable);
+
 #endif
