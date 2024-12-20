@@ -42,6 +42,7 @@
 #include <linux/hrtimer.h>
 #include <linux/ktime.h>
 #include <linux/kthread.h>
+#include <linux/vmalloc.h>
 #include <uapi/sound/asound.h>
 #include <sound/control.h>
 #include <sound/soc.h>
@@ -264,7 +265,6 @@ char *aw87xxx_show_current_profile(int dev_index)
 	AW_LOGE("not found struct aw87xxx, dev_index = [%d]", dev_index);
 	return NULL;
 }
-EXPORT_SYMBOL(aw87xxx_show_current_profile);
 
 int aw87xxx_set_profile(int dev_index, char *profile)
 {
@@ -283,7 +283,6 @@ int aw87xxx_set_profile(int dev_index, char *profile)
 	AW_LOGE("not found struct aw87xxx, dev_index = [%d]", dev_index);
 	return -EINVAL;
 }
-EXPORT_SYMBOL(aw87xxx_set_profile);
 
 int aw87xxx_set_profile_by_id(int dev_index, int profile_id)
 {
@@ -300,7 +299,6 @@ int aw87xxx_set_profile_by_id(int dev_index, int profile_id)
 					dev_index, profile, profile_id);
 	return aw87xxx_set_profile(dev_index, profile);
 }
-EXPORT_SYMBOL(aw87xxx_set_profile_by_id);
 
 /****************************************************************************
  *
@@ -705,8 +703,6 @@ int aw87xxx_add_codec_controls(void *codec)
 
 	return 0;
 }
-EXPORT_SYMBOL(aw87xxx_add_codec_controls);
-
 
 /****************************************************************************
  *
@@ -1015,7 +1011,7 @@ static ssize_t aw87xxx_attr_set_hwen(struct device *dev,
 	return len;
 }
 
-int aw87xxx_awrw_write(struct aw87xxx *aw87xxx,
+static int aw87xxx_awrw_write(struct aw87xxx *aw87xxx,
 			const char *buf, size_t count)
 {
 	int i = 0, ret = -1;

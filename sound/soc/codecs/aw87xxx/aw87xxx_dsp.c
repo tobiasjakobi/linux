@@ -324,7 +324,6 @@ int aw87xxx_spin_set_record_val(void)
 
 	return aw87xxx_dsp_set_spin(g_spin_value);
 }
-EXPORT_SYMBOL(aw87xxx_spin_set_record_val);
 
 void aw87xxx_device_parse_topo_id_dt(struct aw_device *aw_dev)
 {
