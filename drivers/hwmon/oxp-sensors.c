@@ -90,6 +90,8 @@ struct oxp_config {
 struct oxp_data {
 	struct device *hwmon_dev;
 	const struct oxp_config *config;
+
+	bool pwm_auto; /* Is the EC controlling the PWM automatically? */
 };
 
 static const struct oxp_config config_oxp = {
@@ -318,6 +320,22 @@ static int write_to_ec(u8 reg, u8 value)
 	return ret;
 }
 
+static int pwm_auto_from_hw(struct oxp_data *data)
+{
+	const struct oxp_config *config = data->config;
+
+	long tmp;
+	int ret;
+
+	ret = read_from_ec(config->sensor_pwm_enable_reg, 1, &tmp);
+	if (ret < 0)
+		return ret;
+
+	data->pwm_auto = tmp == PWM_MODE_AUTO;
+
+	return ret;
+}
+
 /* Rescale a (HW) sensor PWM value to userspace range. */
 static long rescale_sensor_pwm_to_user(const struct oxp_config *config, long val)
 {
@@ -410,18 +428,48 @@ static ssize_t tt_toggle_show(struct device *dev,
 static DEVICE_ATTR_RW(tt_toggle);
 
 /* PWM enable/disable functions */
-static int oxp_pwm_enable(const struct oxp_config *config)
+static int oxp_pwm_enable(struct oxp_data *data)
 {
-	if (test_bit(OXP_FEATURE_PWM, &config->features))
-		return write_to_ec(config->sensor_pwm_enable_reg, PWM_MODE_MANUAL);
+	const struct oxp_config *config;
+	int ret;
+
+	if (!data->pwm_auto)
+		return 0;
+
+	config = data->config;
+
+	if (test_bit(OXP_FEATURE_PWM, &config->features)) {
+		ret = write_to_ec(config->sensor_pwm_enable_reg, PWM_MODE_MANUAL);
+		if (ret < 0)
+			return ret;
+
+		data->pwm_auto = false;
+
+		return 0;
+	}
 
 	return -EINVAL;
 }
 
-static int oxp_pwm_disable(const struct oxp_config *config)
+static int oxp_pwm_disable(struct oxp_data *data)
 {
-	if (test_bit(OXP_FEATURE_PWM, &config->features))
-		return write_to_ec(config->sensor_pwm_enable_reg, PWM_MODE_AUTO);
+	const struct oxp_config *config;
+	int ret;
+
+	if (data->pwm_auto)
+		return 0;
+
+	config = data->config;
+
+	if (test_bit(OXP_FEATURE_PWM, &config->features)) {
+		ret = write_to_ec(config->sensor_pwm_enable_reg, PWM_MODE_AUTO);
+		if (ret < 0)
+			return ret;
+
+		data->pwm_auto = true;
+
+		return 0;
+	}
 
 	return -EINVAL;
 }
@@ -468,8 +516,11 @@ static int oxp_platform_read(struct device *dev, enum hwmon_sensor_types type,
 			}
 			break;
 		case hwmon_pwm_enable:
-			if (test_bit(OXP_FEATURE_PWM, &config->features))
-				return read_from_ec(config->sensor_pwm_enable_reg, 1, val);
+			if (test_bit(OXP_FEATURE_PWM, &config->features)) {
+				*val = data->pwm_auto ? PWM_MODE_AUTO : PWM_MODE_MANUAL;
+
+				return 0;
+			}
 			break;
 		default:
 			break;
@@ -493,12 +544,12 @@ static int oxp_platform_write(struct device *dev, enum hwmon_sensor_types type,
 		switch (attr) {
 		case hwmon_pwm_enable:
 			if (val == 1)
-				return oxp_pwm_enable(config);
+				return oxp_pwm_enable(data);
 			else if (val == 0)
-				return oxp_pwm_disable(config);
+				return oxp_pwm_disable(data);
 			return -EINVAL;
 		case hwmon_pwm_input:
-			if (val < 0 || val > 255)
+			if (val < 0 || val > 255 || data->pwm_auto)
 				return -EINVAL;
 			if (test_bit(OXP_FEATURE_PWM, &config->features)) {
 				const long hw_val = rescale_sensor_pwm_to_hw(config, val);
@@ -590,6 +641,14 @@ static int oxp_platform_probe(struct platform_device *pdev)
 		return PTR_ERR(data->hwmon_dev);
 
 	platform_set_drvdata(pdev, data);
+
+	if (test_bit(OXP_FEATURE_PWM, &config->features)) {
+		int ret;
+
+		ret = pwm_auto_from_hw(data);
+		if (ret < 0)
+			return ret;
+	}
 
 	return 0;
 }
