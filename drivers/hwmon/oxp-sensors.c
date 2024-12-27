@@ -569,7 +569,7 @@ static int oxp_platform_write(struct device *dev, enum hwmon_sensor_types type,
 			if (val < 0 || val > 255 || data->pwm_auto)
 				return -EINVAL;
 			if (test_bit(OXP_FEATURE_PWM, &config->features)) {
-				const long hw_val = rescale_sensor_pwm_to_hw(config, val);
+				const long hw_val = data->pwm_auto ? val : rescale_sensor_pwm_to_hw(config, val);
 
 				return write_to_ec(config->sensor_pwm_reg, hw_val);
 			}
